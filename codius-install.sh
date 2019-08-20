@@ -34,7 +34,7 @@ LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
 INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/codius-install.sh"
-K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/manifests"
+K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/kata-deploy/manifests"
 ########## k3s ##########
 K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v0.8.0/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`

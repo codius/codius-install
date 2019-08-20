@@ -22,16 +22,12 @@ spec:
           preStop:
             exec:
               command: ["bash", "-c", "/opt/kata-artifacts/scripts/kata-deploy.sh cleanup"]
-        command: [ "bash", "-c", "cp /etc/containerd/config.toml /etc/containerd/config.toml.tmpl; /opt/kata-artifacts/scripts/kata-deploy.sh install" ]
+        command: [ "bash", "-c", "/opt/kata-artifacts/scripts/kata-deploy.sh install" ]
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: CONTAINERD_CONF_FILE
-          value: /etc/containerd/config.toml.tmpl
-        - name: CRI_RESTART_CMD
-          value: systemctl restart k3s && sleep 10
         securityContext:
           privileged: false
         volumeMounts:
@@ -39,6 +35,8 @@ spec:
           mountPath: /etc/crio/
         - name: containerd-conf
           mountPath: /etc/containerd/
+        - name: containerd-k3s-conf
+          mountPath: /var/lib/rancher/k3s/agent/etc/containerd/
         - name: kata-artifacts
           mountPath: /opt/kata/
         - name: dbus
@@ -52,6 +50,9 @@ spec:
           hostPath:
             path: /etc/crio/
         - name: containerd-conf
+          hostPath:
+            path: /etc/containerd/
+        - name: containerd-k3s-conf
           hostPath:
             path: /var/lib/rancher/k3s/agent/etc/containerd/
         - name: kata-artifacts
