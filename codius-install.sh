@@ -54,7 +54,6 @@ RESET=`tput sgr0`
 #Error Message#Error Message
 ERR_ROOT_PRIVILEGE_REQUIRED=(10 "This install script need root privilege, please retry use 'sudo' or root user!")
 ERR_NOT_PUBLIC_IP=(11 "You need a public IP to run Codius!")
-ERR_MONEYD_CONFIGURE=(12 "There is an error on configuring moneyd, please check you entered correct secret and your account have at least 36 XRP. If you meet these requirements, please restart the script and try again.")
 ERR_UNKNOWN_MSG_TYPE=98
 ERR_UNKNOWN=99
 # Helpers ==============================================
@@ -220,12 +219,6 @@ install_update_cert_manager() {
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook
 }
 
-install_update_moneyd() {
-  # _exec kubectl apply -f "${K8S_MANIFEST_PATH}/moneyd.yaml"
-  _exec kubectl apply -f "${K8S_MANIFEST_PATH}/moneyd-local.yaml"
-  _exec kubectl rollout status deployment -n moneyd moneyd
-}
-
 install_update_codiusd() {
   ${SUDO} ${CURL_C} /tmp/codiusd.yaml "${K8S_MANIFEST_PATH}/codiusd.yaml" >>"${LOG_OUTPUT}" 2>&1
   sed -i s/codius.example.com/$HOSTNAME/g /tmp/codiusd.yaml
@@ -268,18 +261,6 @@ install()
     show_message error "No Hostname entered, exiting..."
     exit 0
   fi
-
-  # # Wallet secret for Moneyd
-  # echo "[+] What is your XRP wallet secret? This is required for you to receive XRP via Moneyd."
-
-  # while true; do
-  #   read -p "Wallet Secret: " -e SECRET
-  #   if [[ -z "$SECRET" ]] || ! [[ "$SECRET" =~ ^s[a-zA-Z0-9]{28,}+$ ]] ; then
-  #     show_message error "Invalid wallet secret entered, try again..."
-  #   else
-  #     break
-  #   fi
-  # done
 
   # Existing SSL certificate
   echo "[+] What is the file path for your SSL certificate? Leave blank to auto-generate certificate."
@@ -435,21 +416,6 @@ EOF
 
   # ============================================== Certificate
 
-  # Moneyd ==============================================
-
-  show_message info "[+] Installing Moneyd... "
-
-  # _exec kubectl create namespace moneyd
-  # _exec kubectl run moneyd-config -n moneyd --image wilsonianbcoil/moneyd-xrp --generator=run-pod/v1 --restart=Never --command -- sleep 1000
-  # _exec kubectl wait --for=condition=Ready --timeout=60s -n moneyd pod/moneyd-config
-  # # echo -ne "$SECRET\n" | ${SUDO} $(which moneyd) xrp:configure > /dev/null 2>&1 || { show_message error "${ERR_MONEYD_CONFIGURE[1]}" ; exit "${ERR_MONEYD_CONFIGURE[0]}" ; }
-  # kubectl exec moneyd-config -n moneyd -it -- /usr/local/bin/moneyd xrp:configure -t --advanced
-  # _exec kubectl create secret generic moneyd-config -n moneyd --from-file=.moneyd.json=<(kubectl exec moneyd-config -n moneyd -- cat /root/.moneyd.test.json)
-  # _exec kubectl delete pod moneyd-config -n moneyd
-  install_update_moneyd
-
-  # ============================================== Moneyd
-
   # Codiusd =============================================
 
   show_message info "[+] Installing Codiusd... "
@@ -495,9 +461,6 @@ update()
   show_message info "[+] Updating cert-manager... "
   install_update_cert_manager
 
-  show_message info "[+] Updating Moneyd... "
-  install_update_moneyd
-
   show_message info "[+] Updating Codiusd... "
   install_update_codiusd
 
@@ -517,7 +480,7 @@ clean(){
   check_user
 
   show_message warn "This action will remove packages listed below and all configuration files belonging to them:
-  \n* k3s\n* Kata Containers\n* Codiusd\n* Moneyd"
+  \n* k3s\n* Kata Containers\n* Codiusd"
 
   new_line
   read -p "Continue Anyway? [y/N]: " -e CONTINUE
@@ -549,14 +512,12 @@ debug(){
   export CODIUS_PUBLIC_URI=https://$HOSTNAME
 
 
-  local services=( hyperd moneyd codiusd nginx )
-  local commands=( node npm hyperd hyperctl moneyd codiusd certbot )
+  local services=( hyperd codiusd nginx )
+  local commands=( node npm hyperd hyperctl codiusd certbot )
   local debug_commands=('node -v ; npm -v ; yarn -v'
     'hyperd run -t test /bin/sh'
     'hyperctl info'
     'hyperctl list'
-    'moneyd xrp:start'
-    'moneyd xrp:info'
     'codiusd'
     'netstat -tulpn'
   )
@@ -624,7 +585,6 @@ debug(){
   show_message info "[!] Stoping services... "
   for i in "${services[@]}"
   do
-    if [ "$i" = moneyd ]; then i='moneyd-xrp'; fi
     if [[ "${INIT_SYSTEM}" == "systemd" ]];then
       ${SUDO} systemctl stop $i >>"${TMPFILE}" 2>&1 
     else 
@@ -648,7 +608,7 @@ debug(){
   done
 
   show_message info "[!] Killing debug proccess..."
-  commands_to_kill=(moneyd codiusd hyperd)
+  commands_to_kill=(codiusd hyperd)
   for p in "${commands_to_kill[@]}"
   do
     ${SUDO} kill -9 $(ps -ef|grep $p |grep -v "grep"|awk '{print $2}') || true
@@ -657,7 +617,6 @@ debug(){
   show_message info "[+] Starting services... "
   for i in "${services[@]}"
   do
-    if [[ $i = moneyd ]]; then i='moneyd-xrp'; fi
     if [[ "${INIT_SYSTEM}" == "systemd" ]];then
       ${SUDO} systemctl restart $i >>"${TMPFILE}" 2>&1 || true
     else 
