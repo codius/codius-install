@@ -40,8 +40,6 @@ K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v0.9.0/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
 ########## Calico ##########
 CALICO_URL="https://docs.projectcalico.org/v3.9/manifests/calico-policy-only.yaml"
-########## Local Path Provisioner ##########
-LOCAL_PATH_PROVISIONER_URL="https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.9/deploy/local-path-storage.yaml"
 ########## Cert-manager ##########
 CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.10.0/cert-manager.yaml"
 ########## Constant ##########
@@ -212,11 +210,6 @@ install_update_calico() {
   _exec kubectl rollout status ds -n kube-system calico-node
 }
 
-install_update_local_storage() {
-  _exec kubectl apply -f $LOCAL_PATH_PROVISIONER_URL
-  _exec kubectl rollout status deployment -n local-path-storage local-path-provisioner
-}
-
 install_update_acme_dns() {
   _exec kubectl apply -f "${K8S_MANIFEST_PATH}/acme-dns.yaml"
   _exec kubectl wait --for=condition=Available --timeout=60s -n acme-dns deployment/acme-dns
@@ -370,9 +363,6 @@ EOF
   show_message info "[+] Installing Calico policy enforcement... "
   install_update_calico
 
-  show_message info "[+] Installing Local path storage... "
-  install_update_local_storage
-
   # ============================================== Kubernetes
 
   # Certificate ==============================================
@@ -488,9 +478,6 @@ update()
 
   show_message info "[+] Updating Calico policy enforcement... "
   install_update_calico
-
-  show_message info "[+] Updating Local path storage... "
-  install_update_local_storage
 
   show_message info "[+] Updating acme-dns... "
   install_update_acme_dns
