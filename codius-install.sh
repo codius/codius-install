@@ -36,12 +36,12 @@ BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
 INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/codius-install.sh"
 K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/manifests"
 ########## k3s ##########
-K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v0.9.0/install.sh"
+K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.17.2+k3s1/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
 ########## Calico ##########
-CALICO_URL="https://docs.projectcalico.org/v3.9/manifests/calico-policy-only.yaml"
+CALICO_URL="https://docs.projectcalico.org/v3.12/manifests/calico-policy-only.yaml"
 ########## Cert-manager ##########
-CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.10.0/cert-manager.yaml"
+CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml"
 ########## Constant ##########
 #Color Constant
 RED=`tput setaf 1`
@@ -403,7 +403,7 @@ EOF
     ${SUDO} ${CURL_C} /tmp/codius-host-issuer.yaml "${K8S_MANIFEST_PATH}/codius-host-issuer.yaml" >>"${LOG_OUTPUT}" 2>&1
     sed -i s/yourname@codius.example.com/$EMAIL/g /tmp/codius-host-issuer.yaml
     _exec kubectl apply -f /tmp/codius-host-issuer.yaml
-    _exec kubectl wait --for=condition=Ready --timeout=60s -n codiusd issuer/issuer-letsencrypt
+    _exec kubectl wait --for=condition=Ready --timeout=60s -n codiusd issuer/letsencrypt
 
     ${SUDO} ${CURL_C} /tmp/codius-host-certificate.yaml "${K8S_MANIFEST_PATH}/codius-host-certificate.yaml" >>"${LOG_OUTPUT}" 2>&1
     sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-host-certificate.yaml
