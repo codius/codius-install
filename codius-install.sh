@@ -196,10 +196,7 @@ install_update_k3s() {
 
 install_update_kata() {
   _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/kata-rbac.yaml
-  # ${SUDO} ${CURL_C} /tmp/kata-deploy.yaml https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/kata-deploy.yaml >>"${LOG_OUTPUT}" 2>&1
-  # sed -i s/katadocker/wilsonianbcoil/g /tmp/kata-deploy.yaml
-  # _exec kubectl apply -f /tmp/kata-deploy.yaml
-  _exec kubectl apply -f "${K8S_MANIFEST_PATH}/kata-deploy.yaml"
+  _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
   _exec kubectl rollout status ds -n kube-system kata-deploy
   _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/k8s-1.14/kata-qemu-runtimeClass.yaml
 }
@@ -325,6 +322,19 @@ install()
   show_message debug "Setting hostname using 'hostnamectl'"
   # Set hostname
   ${SUDO} hostnamectl set-hostname $HOSTNAME
+
+
+  # git ====================================
+
+  show_message info "[+] Installing git..."
+
+  if [[ "${LSB_DISTRO}" == "centos"  ]] || [[ "${LSB_DISTRO}" == "fedora"  ]] ;then
+    _exec "yum install -y git"
+  elif [[ "${LSB_DISTRO}" == "ubuntu" ]] || [[ "${LSB_DISTRO}" == "debian" ]] ;then
+    _exec "apt-get install -y git"
+  fi
+
+  # ============================================== git
 
   # Subdomain DNS ==============================================
   new_line
