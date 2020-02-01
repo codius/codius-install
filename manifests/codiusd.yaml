@@ -104,7 +104,6 @@ spec:
   - hosts:
     - codius.example.com
     - "*.codius.example.com"
-    secretName: codiusd-certificate
   rules:
   - host: "codius.example.com"
     http: &http_rules
