@@ -6,7 +6,7 @@ This script will let you setup your own codius peer in minutes, even if you have
 ### Installation
 Run the script and follow the assistant:
 
-`wget https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/codius-install.sh -O codius-install.sh && bash codius-install.sh`
+`wget https://raw.githubusercontent.com/wilsonianb/codius-install/operator/codius-install.sh -O codius-install.sh && bash codius-install.sh`
 ### ScreenShot
 ![screen](https://user-images.githubusercontent.com/6250203/41824308-780a9170-7823-11e8-8611-642b84895ccb.png)
 

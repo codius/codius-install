@@ -2,7 +2,7 @@
 # File              : codius-install.sh
 # Author            : N3TC4T <netcat.av@gmail.com>
 # Date              : 16.06.2018
-# Last Modified Date: 26.09.2019
+# Last Modified Date: 13.05.2020
 # Last Modified By  : wilsonianb <brandon@coil.com>
 # Copyright (c) 2018 N3TC4T <netcat.av@gmail.com>
 #
@@ -33,15 +33,15 @@ CURL_C="curl -SL -o"
 LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
-INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/codius-install.sh"
-K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/manifests"
+INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/operator/codius-install.sh"
+K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/operator/manifests"
 ########## k3s ##########
-K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.17.2+k3s1/install.sh"
+K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.18.2+k3s1/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
 ########## Calico ##########
 CALICO_URL="https://docs.projectcalico.org/v3.12/manifests/calico-policy-only.yaml"
 ########## Cert-manager ##########
-CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml"
+CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml"
 ########## Constant ##########
 #Color Constant
 RED=`tput setaf 1`
@@ -184,17 +184,25 @@ check_user() {
 
 install_update_k3s() {
   ${SUDO} ${CURL_C} /tmp/k3s-install.sh ${K3S_URL} >>"${LOG_OUTPUT}" 2>&1 && ${SUDO} chmod a+x /tmp/k3s-install.sh
-
+  ${SUDO} ${CURL_C} /var/tmp/authentication-token-webhook-config.yaml "${K8S_MANIFEST_PATH}/authentication-token-webhook-config.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /var/tmp/authentication-token-webhook-config.yaml
   local INSTALL_K3S_VERSION="${K3S_VERSION}"
-  _exec bash /tmp/k3s-install.sh --cluster-cidr=192.168.0.0/16
+  _exec bash /tmp/k3s-install.sh --cluster-cidr=192.168.0.0/16 --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
   sleep 10
   _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
   _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
   _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
 }
 
+update_traefik() {
+  # Allow ingress for kube apiserver
+  sed -i '/ssl:/a \      insecureSkipVerify: true' /var/lib/rancher/k3s/server/manifests/traefik.yaml
+  _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
+  _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
+}
+
 install_update_kata() {
-  _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/kata-rbac.yaml
+  _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-rbac/base
   _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
   _exec kubectl rollout status ds -n kube-system kata-deploy
   _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/k8s-1.14/kata-qemu-runtimeClass.yaml
@@ -215,15 +223,53 @@ install_update_cert_manager() {
   ${SUDO} ${CURL_C} /tmp/cert-manager.yaml $CERT_MANAGER_URL >>"${LOG_OUTPUT}" 2>&1
   sed -i '/cluster-resource-namespace/a \          - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53' /tmp/cert-manager.yaml
   _exec kubectl apply -f /tmp/cert-manager.yaml
+  sleep 1
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook
 }
 
-install_update_codiusd() {
-  ${SUDO} ${CURL_C} /tmp/codiusd.yaml "${K8S_MANIFEST_PATH}/codiusd.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codiusd.yaml
-  _exec kubectl apply -f /tmp/codiusd.yaml
-  _exec kubectl rollout status deployment -n codiusd codiusd
+install_update_token_auth_webhook() {
+  ${SUDO} ${CURL_C} /tmp/codius-token-auth-webhook.yaml "${K8S_MANIFEST_PATH}/codius-token-auth-webhook.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-token-auth-webhook.yaml
+  _exec kubectl apply -f /tmp/codius-token-auth-webhook.yaml
+  _exec kubectl rollout status deployment codius-token-auth-webhook
+}
+
+# TEMP
+install_update_btp_receiver() {
+  ${SUDO} ${CURL_C} /tmp/btp-receiver.yaml "${K8S_MANIFEST_PATH}/btp-receiver.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/btp-receiver.yaml
+  _exec kubectl apply -f /tmp/btp-receiver.yaml
+  _exec kubectl rollout status deployment btp-receiver
+}
+
+install_update_receipt_verifier() {
+  ${SUDO} ${CURL_C} /tmp/receipt-verifier.yaml "${K8S_MANIFEST_PATH}/receipt-verifier.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/receipt-verifier.yaml
+  _exec kubectl apply -f /tmp/receipt-verifier.yaml
+  _exec kubectl rollout status deployment receipt-verifier
+}
+
+install_update_crd_operator() {
+  # _exec kubectl kustomize github.com/wilsonianb/codius-crd-operator/config/default | kubectl apply -f -
+  mkdir -p /tmp/codius-crd-operator
+  ${SUDO} ${CURL_C} /tmp/codius-crd-operator/kustomization.yaml "${K8S_MANIFEST_PATH}/codius-crd-operator/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
+  ${SUDO} ${CURL_C} /tmp/codius-crd-operator/manager_env_patch.yaml "${K8S_MANIFEST_PATH}/codius-crd-operator/manager_env_patch.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-crd-operator/manager_env_patch.yaml
+  _exec kubectl apply -k /tmp/codius-crd-operator
+}
+
+install_update_codius_web() {
+  ${SUDO} ${CURL_C} /tmp/codius-web.yaml "${K8S_MANIFEST_PATH}/codius-web.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-web.yaml
+  _exec kubectl apply -f /tmp/codius-web.yaml
+  _exec kubectl rollout status deployment codius-web
+}
+
+install_update_codius_host_ingress() {
+  ${SUDO} ${CURL_C} /tmp/codius-host-ingress.yaml "${K8S_MANIFEST_PATH}/codius-host-ingress.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-host-ingress.yaml
+  _exec kubectl apply -f /tmp/codius-host-ingress.yaml
 }
 
 # ============================================== Helpers
@@ -347,16 +393,22 @@ EOF
 
   show_message info "[+] Installing k3s... "
   install_update_k3s
+  update_traefik
 
   show_message info "[+] Installing Kata Containers... "
   install_update_kata
 
   show_message info "[+] Installing Calico policy enforcement... "
-  install_update_calico
+  # install_update_calico
 
   # ============================================== Kubernetes
 
   # Certificate ==============================================
+
+  show_message info "[+] Installing cert-manager... "
+  install_update_cert_manager
+
+  _exec kubectl apply -f "${K8S_MANIFEST_PATH}/codius-namespace.yaml"
 
   if [[ -z "$CERTFILE" ]]; then
     show_message info "[+] Installing acme-dns... "
@@ -364,19 +416,18 @@ EOF
     ${SUDO} ${CURL_C} /tmp/config.cfg https://raw.githubusercontent.com/joohoi/acme-dns/master/config.cfg >>"${LOG_OUTPUT}" 2>&1
     sed -i s/auth.example.org/acme.$HOSTNAME/g /tmp/config.cfg
     sed -i s/127.0.0.1/0.0.0.0/g /tmp/config.cfg
-    sed -i 's/= "both"/= "udp"/g' /tmp/config.cfg
+    sed -i 's/protocol = "both"/protocol = "udp"/g' /tmp/config.cfg
     sed -i s/198.51.100.1/`ifconfig $(route -n | grep ^0.0.0.0 | awk '{print $NF}') | grep inet | grep -v inet6 | awk '{print $2}'`/g /tmp/config.cfg
+    sed -i 's/tls = "letsencryptstaging"/tls = "none"/g' /tmp/config.cfg
+    sed -i 's/port = "443"/port = "80"/g' /tmp/config.cfg
 
     _exec kubectl create namespace acme-dns
     _exec kubectl create configmap acme-dns-config --namespace=acme-dns --from-file=/tmp/config.cfg
     install_update_acme_dns
 
-    show_message info "[+] Installing cert-manager... "
-    install_update_cert_manager
-
     show_message info "[+] Generating certificate for ${HOSTNAME}"
 
-    local ACME_DNS_IP=`kubectl describe pods --namespace=acme-dns --selector=app=acme-dns | grep IP | awk '{print $2}'`
+    local ACME_DNS_IP=`kubectl get pods --namespace=acme-dns --selector=app=acme-dns -o jsonpath='{.items[0].status.podIP}'`
     local ACME_CREDS=`curl -sX POST http://$ACME_DNS_IP/register`
     tee /tmp/acme-dns.json << EOF > /dev/null
 {"$HOSTNAME": $ACME_CREDS, "*.$HOSTNAME": $ACME_CREDS}
@@ -397,31 +448,65 @@ EOF
 
     read -n1 -r -p "Press any key to continue..."
 
-    _exec kubectl create namespace codiusd
-    _exec kubectl create secret generic certmanager-secret --namespace=codiusd --from-file=/tmp/acme-dns.json
+    _exec kubectl create secret generic certmanager-secret --namespace=codius --from-file=/tmp/acme-dns.json
 
     ${SUDO} ${CURL_C} /tmp/codius-host-issuer.yaml "${K8S_MANIFEST_PATH}/codius-host-issuer.yaml" >>"${LOG_OUTPUT}" 2>&1
     sed -i s/yourname@codius.example.com/$EMAIL/g /tmp/codius-host-issuer.yaml
     _exec kubectl apply -f /tmp/codius-host-issuer.yaml
-    _exec kubectl wait --for=condition=Ready --timeout=60s -n codiusd issuer/letsencrypt
+    _exec kubectl wait --for=condition=Ready --timeout=60s -n codius issuer/letsencrypt
 
     ${SUDO} ${CURL_C} /tmp/codius-host-certificate.yaml "${K8S_MANIFEST_PATH}/codius-host-certificate.yaml" >>"${LOG_OUTPUT}" 2>&1
     sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-host-certificate.yaml
     _exec kubectl apply -f /tmp/codius-host-certificate.yaml
-    _exec kubectl wait --for=condition=Ready --timeout=600s -n codiusd certificate/codius-host-certificate
+    _exec kubectl wait --for=condition=Ready --timeout=600s -n codius certificate/codius-host-certificate
+    # FIXME: sync tls secret between codius and default namespaces
+    _exec kubectl get secret -n codiusd codiusd-certificate -o go-template='{{ index .data "tls.crt" | base64decode }}' > /tmp/tls.crt
+    _exec kubectl get secret -n codiusd codiusd-certificate -o go-template='{{ index .data "tls.key" | base64decode }}' > /tmp/tls.key
+    _exec kubectl create secret tls codius-certificate --key /tmp/tls.key --cert /tmp/tls.crt
   else
-    _exec kubectl create namespace codiusd
-    _exec kubectl create secret tls codiusd-certificate --key $KEYFILE --cert $CERTFILE --namespace codiusd
+    _exec kubectl create secret tls codius-certificate --key $KEYFILE --cert $CERTFILE --namespace codius
+    _exec kubectl create secret tls codius-certificate --key $KEYFILE --cert $CERTFILE
   fi
 
   # ============================================== Certificate
 
-  # Codiusd =============================================
+  # TEMP
+  install_update_btp_receiver
 
-  show_message info "[+] Installing Codiusd... "
-  install_update_codiusd
+  # Token Auth Webhook =============================================
 
-  # ============================================= Codiusd
+  show_message info "[+] Installing Token Auth Webhook... "
+  install_update_token_auth_webhook
+
+  # ============================================= Token Auth Webhook
+
+  # Receipt Verifier =============================================
+
+  show_message info "[+] Installing Receipt Verifier... "
+  install_update_receipt_verifier
+
+  # ============================================= Receipt Verifier
+
+  # CRD Operator =============================================
+
+  show_message info "[+] Installing CRD Operator... "
+  install_update_crd_operator
+
+  # ============================================= CRD Operator
+
+  # Codius web =============================================
+
+  show_message info "[+] Installing Codius web... "
+  install_update_codius_web
+
+  # ============================================= Codius web
+
+  # Codius host ingress =============================================
+
+  show_message info "[+] Installing Codius host ingress... "
+  install_update_codius_host_ingress
+
+  # ============================================= Codius host ingress
 
   # ============================================== Finishing
   new_line
@@ -429,7 +514,7 @@ EOF
   new_line
   show_message done "[!] Congratulations, it looks like you installed Codius successfully!"
   new_line
-  show_message done "[-] You can check your Codius by opening https://$HOSTNAME or by searching for your host at https://codiushosts.com"
+  show_message done "[-] You can check your Codius by opening https://$HOSTNAME"
   show_message done "[-] For installation log visit $LOG_OUTPUT"
   show_message done "[-] You can see everything running in your Kubernetes cluster by running: kubectl get all --all-namespaces"
   new_line
@@ -460,9 +545,6 @@ update()
 
   show_message info "[+] Updating cert-manager... "
   install_update_cert_manager
-
-  show_message info "[+] Updating Codiusd... "
-  install_update_codiusd
 
   printf "\n\n"
   show_message done "[!] Everything done!"
@@ -582,7 +664,7 @@ debug(){
 
   local TMPFILE="/tmp/codius_debug-$(date +%Y-%m-%d.%H-%M)"
 
-  show_message info "[!] Stoping services... "
+  show_message info "[!] Stopping services... "
   for i in "${services[@]}"
   do
     if [[ "${INIT_SYSTEM}" == "systemd" ]];then
@@ -607,7 +689,7 @@ debug(){
     exec 3>&-
   done
 
-  show_message info "[!] Killing debug proccess..."
+  show_message info "[!] Killing debug process..."
   commands_to_kill=(codiusd hyperd)
   for p in "${commands_to_kill[@]}"
   do

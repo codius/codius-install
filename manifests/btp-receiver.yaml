@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: btp-receiver
+  namespace: default
+  labels:
+    app: btp-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: btp-receiver
+  template:
+    metadata:
+      labels:
+        app: btp-receiver
+    spec:
+      containers:
+      - name: btp-receiver
+        image: wilsonianbcoil/btp-receiver
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: btp-receiver
+  namespace: default
+spec:
+  selector:
+    app: btp-receiver
+  ports:
+  - name: btp-server
+    protocol: TCP
+    port: 3000
+  - name: spsp-server
+    protocol: TCP
+    port: 4000
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: btp-receiver
+  namespace: default
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    traefik.frontend.rule.type: PathPrefixStrip
+spec:
+  tls:
+  - hosts:
+    - codius.example.com
+    secretName: codius-certificate
+  rules:
+  - host: codius.example.com
+    http:
+      paths:
+      - path: /btp
+        backend:
+          serviceName: btp-receiver
+          servicePort: 3000
+      - path: /spsp
+        backend:
+          serviceName: btp-receiver
+          servicePort: 4000

@@ -1,21 +1,13 @@
 apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
-  name: codius-host-certificate
-  namespace: codiusd
+  name: codius-certificate
+  namespace: codius
 spec:
-  secretName: codiusd-certificate
+  secretName: codius-certificate
   issuerRef:
-    name: issuer-letsencrypt
-    namespace: codiusd
+    name: letsencrypt
   commonName: codius.example.com
   dnsNames:
   - codius.example.com
   - "*.codius.example.com"
-  acme:
-    config:
-    - dns01:
-        provider: acmedns
-      domains:
-        - codius.example.com
-        - "*.codius.example.com"

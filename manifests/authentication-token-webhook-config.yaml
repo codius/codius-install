@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Config
+clusters:
+  - name: codius-auth-token-webhook
+    cluster:
+      insecure-skip-tls-verify: true
+      server: https://codius.example.com/authenticate
+users:
+  - name: kube-apiserver
+current-context: codius-auth-token-webhook
+contexts:
+- context:
+    cluster: codius-auth-token-webhook
+    user: kube-apiserver
+  name: codius-auth-token-webhook

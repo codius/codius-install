@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: receipt-verifier
+  namespace: default
+  labels:
+    app: receipt-verifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: receipt-verifier
+  template:
+    metadata:
+      labels:
+        app: receipt-verifier
+    spec:
+      containers:
+      - name: receipt-verifier
+        image: wilsonianbcoil/receipt-verifier
+        env:
+        - name: REDIS_URI
+          value: mock
+        - name: SPSP_ENDPOINT
+          # value: https://reddit.xrptipbot.com/wilsonianb/.well-known/pay
+          # value: _spsp-server._tcp.btp-receiver.default.svc.cluster.local/spsp/codiushost
+          value: https://codius.example.com/spsp/spsp/codiushost
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: receipt-verifier
+  namespace: default
+spec:
+  selector:
+    app: receipt-verifier
+  ports:
+  - name: balances
+    protocol: TCP
+    port: 3000
+  - name: spsp-proxy
+    protocol: TCP
+    port: 3001

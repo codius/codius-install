@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: codius-crd-operator-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        env:
+        - name: CODIUS_AUTH_URL
+          value: http://codius-web.default.svc.cluster.local:3000/authenticate
+        - name: CODIUS_HOSTNAME
+          value: codius.example.com
+        - name: CODIUS_CERT_SECRET
+          value: codius-certificate
+        - name: RUNTIME_CLASS_NAME
+          value: kata-qemu

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codius-web
+  namespace: default
+  labels:
+    app: codius-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codius-web
+  template:
+    metadata:
+      labels:
+        app: codius-web
+    spec:
+      containers:
+      - name: codius-web
+        image: wilsonianbcoil/codius-web
+        env:
+        - name: CODIUS_WEB_URL
+          value: https://codius.example.com
+        - name: PAYMENT_POINTER
+          value: "$codius.example.com"
+        - name: RECEIPT_VERIFIER_URI_PRIVATE
+          value: http://receipt-verifier.default:3000
+        - name: RECEIPT_VERIFIER_URI_PUBLIC
+          value: https://codius.example.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codius-web
+  namespace: default
+spec:
+  selector:
+    app: codius-web
+  ports:
+  - protocol: TCP
+    port: 3000

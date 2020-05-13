@@ -1,0 +1,5 @@
+bases:
+# - github.com/wilsonianb/codius-crd-operator/config/default
+- github.com/wilsonianb/codius-crd-operator/config/default?ref=ingress
+patchesStrategicMerge:
+- manager_env_patch.yaml

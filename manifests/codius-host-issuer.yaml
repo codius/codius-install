@@ -2,16 +2,15 @@ apiVersion: cert-manager.io/v1alpha2
 kind: Issuer
 metadata:
   name: letsencrypt
-  namespace: codiusd
+  namespace: codius
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: yourname@codius.example.com
     privateKeySecretRef:
       name: account-private-key-secret
-    dns01:
-      providers:
-      - name: acmedns
+    solvers:
+    - dns01:
         acmedns:
           host: http://acme-dns.acme-dns
           accountSecretRef:
