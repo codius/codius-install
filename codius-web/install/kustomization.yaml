@@ -1,0 +1,6 @@
+bases:
+- ../base
+
+patchesStrategicMerge:
+- add_ingress_annotations.yaml
+- set_hostname.yaml

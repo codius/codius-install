@@ -1,0 +1,107 @@
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: kubernetes-dashboard
+#   namespace: kubernetes-dashboard
+# #  annotations:
+# #    ingress.kubernetes.io/auth-type: "forward"
+# #    ingress.kubernetes.io/auth-url: "http://keda.suidoc.net/bearer"
+# #    ingress.kubernetes.io/buffering: |-
+# #      retryexpression: IsNetworkError() && Attempts() <= 1000
+# spec:
+# #  tls:
+# #  - hosts:
+# #    - cafe.example.com
+# #    secretName: cafe-secret
+#   rules:
+# #  - host: cafe.example.com
+#   - host: keda.suidoc.net
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kubernetes-dashboard
+#           servicePort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+  annotations:
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+spec:
+  rules:
+  - host: demo.suidoc.net
+    http:
+      paths:
+      - path: /dashboard
+        backend:
+          serviceName: kubernetes-dashboard
+          servicePort: 80
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codius-web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codius-web
+  namespace: codius-web
+  labels:
+    app: codius-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codius-web
+  template:
+    metadata:
+      labels:
+        app: codius-web
+    spec:
+      containers:
+      - name: codius-web
+        image: wilsonianbcoil/codius-web
+        env:
+        - name: DASHBOARD_URL
+          value: https://codius-web.example.com
+        - name: PAYMENT_POINTER
+          value: "$example.com/codius-web"
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codius-web
+  namespace: codius-web
+spec:
+  selector:
+    app: codius-web
+  ports:
+  - protocol: TCP
+    port: 3000
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: codius-web
+  namespace: codius-web
+spec:
+  tls:
+  - hosts:
+    - codius-web.example.com
+    - "*.codius-web.example.com"
+    secretName: codius-web-certificate
+  rules:
+  - host: "codius-web.example.com"
+    http: &http_rules
+      paths:
+      - backend:
+          serviceName: codius-web
+          servicePort: 3000
+  - host: "*.codius-web.example.com"
+    http: *http_rules

@@ -1,0 +1,46 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  chart: https://%{KUBERNETES_API}%/static/charts/traefik-1.81.0.tgz
+  set:
+    rbac.enabled: "true"
+    ssl.enabled: "true"
+    metrics.prometheus.enabled: "true"
+    kubernetes.ingressEndpoint.useDefaultPublishedService: "true"
+    ssl.enforced: "true"
+    # acme.enabled: "true"
+    # acme.challengeType: "dns-01"
+    # acme.dnsProvider.name: "acmedns"
+    # acme.dnsProvider.acmedns.ACME_DNS_API_BASE: "http://acme-dns.acme-dns"
+    # acme.dnsProvider.acmedns.ACME_DNS_STORAGE_PATH: "/etc/letsencrypt/acmedns.json"
+    # acme.domains.domainsList.main: "codius.example.com"
+    # acme.domains.domainsList.sans: "*codius.example.com"
+    # acme.email: "yourname@codius.example.com"
+    # acme.staging: "false"
+    # acme.logging: "true"
+    metrics.serviceMonitor.enabled: "true"
+  valuesContent: |-
+    acme:
+      enabled: true
+      challengeType: dns-01
+      dnsProvider:
+        name: acme-dns
+        acme-dns:
+          ACME_DNS_API_BASE: http://acme-dns.acme-dns
+          ACME_DNS_STORAGE_PATH: /acme/acmedns.json
+      domains:
+        enabled: true
+        domainsList:
+        - main: codius.example.com
+        - sans:
+          - "*.codius.example.com"
+      resolvers:
+      - "1.1.1.1:53"
+      - "8.8.8.8:53"
+      email: yourname@codius.example.com
+      onHostRule: false
+      staging: false
+      logging: true

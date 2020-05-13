@@ -1,0 +1,9 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: keda
+  namespace: kube-system
+spec:
+  chart: keda
+  repo: https://kedacore.github.io/charts
+  targetNamespace: keda

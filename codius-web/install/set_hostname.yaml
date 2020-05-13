@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: codius-web
+  namespace: codius-web
+spec:
+  tls:
+  - hosts:
+    - demo.suidoc.net
+    - "*.demo.suidoc.net"
+  rules:
+  - host: "demo.suidoc.net"
+    http: &http_rules
+      paths:
+      - backend:
+          serviceName: codius-web
+          servicePort: 3000
+  - host: "*.demo.suidoc.net"
+    http: *http_rules

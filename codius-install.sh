@@ -34,7 +34,7 @@ LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
 INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/codius-install.sh"
-K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/k8s/manifests"
+K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/codius-web/manifests"
 ########## k3s ##########
 K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.17.2+k3s1/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
@@ -290,6 +290,18 @@ install()
     done
   fi
 
+  # Payment pointer
+  echo "[+] What is your payment pointer (\$example.com/bob)?"
+  while true; do
+    read -p "Payment pointer: " -e PAYMENTPOINTER
+
+    if [[ -z "$PAYMENTPOINTER" ]] || ! [[ "$PAYMENTPOINTER" =~ $(echo '^\$[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$') ]]; then
+        show_message error "Invalid payment pointer entered, try again..."
+    else
+      break
+    fi
+  done
+
   show_message debug "Setting hostname using 'hostnamectl'"
   # Set hostname
   ${SUDO} hostnamectl set-hostname $HOSTNAME
@@ -401,7 +413,7 @@ EOF
   new_line
   show_message done "[!] Congratulations, it looks like you installed Codius successfully!"
   new_line
-  show_message done "[-] You can check your Codius by opening https://$HOSTNAME or by searching for your host at https://codiushosts.com"
+  show_message done "[-] You can check your Codius by opening https://$HOSTNAME"
   show_message done "[-] For installation log visit $LOG_OUTPUT"
   show_message done "[-] You can see everything running in your Kubernetes cluster by running: kubectl get all --all-namespaces"
   new_line

@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+  annotations:
+    ingress.kubernetes.io/custom-response-headers: Access-Control-Allow-Origin:*||Access-Control-Allow-Headers:Authorization
+spec:
+  rules:
+  - host: dashboard.demo.suidoc.net
+    http:
+      paths:
+      - backend:
+          serviceName: kubernetes-dashboard
+          servicePort: 80
