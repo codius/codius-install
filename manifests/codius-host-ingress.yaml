@@ -26,9 +26,9 @@ spec:
         backend:
           serviceName: kubernetes
           servicePort: 443
-      - path: /authenticate
+      - path: /token
         backend:
-          serviceName: codius-token-auth-webhook
+          serviceName: codius-auth
           servicePort: 8080
       - path: /{id:balances/.*:creditReceipt$}
         backend:

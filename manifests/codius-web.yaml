@@ -23,9 +23,7 @@ spec:
           value: https://codius.example.com
         - name: PAYMENT_POINTER
           value: "$codius.example.com"
-        - name: RECEIPT_VERIFIER_URI_PRIVATE
-          value: http://receipt-verifier.default:3000
-        - name: RECEIPT_VERIFIER_URI_PUBLIC
+        - name: RECEIPT_VERIFIER_URI
           value: https://codius.example.com
 ---
 apiVersion: v1

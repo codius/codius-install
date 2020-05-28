@@ -10,7 +10,7 @@ spec:
       - name: manager
         env:
         - name: CODIUS_AUTH_URL
-          value: http://codius-web.default.svc.cluster.local:3000/authenticate
+          value: http://codius-auth.default.svc.cluster.local:8080/forward
         - name: CODIUS_HOSTNAME
           value: codius.example.com
         - name: CODIUS_CERT_SECRET

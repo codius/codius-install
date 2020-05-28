@@ -36,23 +36,23 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: codius-token-auth-webhook
+  name: codius-auth
   namespace: default
   labels:
-    app: codius-token-auth-webhook
+    app: codius-auth
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: codius-token-auth-webhook
+      app: codius-auth
   template:
     metadata:
       labels:
-        app: codius-token-auth-webhook
+        app: codius-auth
     spec:
       containers:
-      - name: codius-token-auth-webhook
-        image: wilsonianbcoil/codius-token-auth-webhook
+      - name: codius-auth
+        image: wilsonianbcoil/codius-auth
         env:
         - name: AUTH_PRICE
           value: "1"
@@ -62,15 +62,17 @@ spec:
           # value: http://_balances._tcp.receipt-verifier.default.svc.cluster.local
           # value: http://_balances._tcp.receipt-verifier.default
           value: http://receipt-verifier.default:3000
+        - name: CODIUS_HOST_URL
+          value: https://codius.example.com
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: codius-token-auth-webhook
+  name: codius-auth
   namespace: default
 spec:
   selector:
-    app: codius-token-auth-webhook
+    app: codius-auth
   ports:
   - protocol: TCP
     port: 8080

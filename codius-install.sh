@@ -228,13 +228,6 @@ install_update_cert_manager() {
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook
 }
 
-install_update_token_auth_webhook() {
-  ${SUDO} ${CURL_C} /tmp/codius-token-auth-webhook.yaml "${K8S_MANIFEST_PATH}/codius-token-auth-webhook.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-token-auth-webhook.yaml
-  _exec kubectl apply -f /tmp/codius-token-auth-webhook.yaml
-  _exec kubectl rollout status deployment codius-token-auth-webhook
-}
-
 # TEMP
 install_update_btp_receiver() {
   ${SUDO} ${CURL_C} /tmp/btp-receiver.yaml "${K8S_MANIFEST_PATH}/btp-receiver.yaml" >>"${LOG_OUTPUT}" 2>&1
@@ -248,6 +241,13 @@ install_update_receipt_verifier() {
   sed -i s/codius.example.com/$HOSTNAME/g /tmp/receipt-verifier.yaml
   _exec kubectl apply -f /tmp/receipt-verifier.yaml
   _exec kubectl rollout status deployment receipt-verifier
+}
+
+install_update_codius_auth() {
+  ${SUDO} ${CURL_C} /tmp/codius-auth.yaml "${K8S_MANIFEST_PATH}/codius-auth.yaml" >>"${LOG_OUTPUT}" 2>&1
+  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-auth.yaml
+  _exec kubectl apply -f /tmp/codius-auth.yaml
+  _exec kubectl rollout status deployment codius-auth
 }
 
 install_update_crd_operator() {
@@ -473,19 +473,19 @@ EOF
   # TEMP
   install_update_btp_receiver
 
-  # Token Auth Webhook =============================================
-
-  show_message info "[+] Installing Token Auth Webhook... "
-  install_update_token_auth_webhook
-
-  # ============================================= Token Auth Webhook
-
   # Receipt Verifier =============================================
 
   show_message info "[+] Installing Receipt Verifier... "
   install_update_receipt_verifier
 
   # ============================================= Receipt Verifier
+
+  # Codius Auth =============================================
+
+  show_message info "[+] Installing Codius Auth... "
+  install_update_codius_auth
+
+  # ============================================= Codius Auth
 
   # CRD Operator =============================================
 
