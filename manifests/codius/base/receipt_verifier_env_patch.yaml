@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: receipt-verifier
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: receipt-verifier
+        env:
+        - name: REDIS_URI
+          value: mock
+        - name: SPSP_ENDPOINT
+          # value: https://reddit.xrptipbot.com/wilsonianb/.well-known/pay
+          # value: https://codius.example.com/spsp/spsp/codiushost
+          valueFrom:
+            configMapKeyRef:
+              name: codius-config
+              key: payment_pointer_url

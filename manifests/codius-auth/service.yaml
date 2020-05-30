@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: codius-auth
+  namespace: default
+spec:
+  selector:
+    app: codius-auth
+  ports:
+  - protocol: TCP
+    port: 8080

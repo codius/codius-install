@@ -12,8 +12,12 @@ spec:
         - name: CODIUS_AUTH_URL
           value: http://codius-auth.default.svc.cluster.local:8080/forward
         - name: CODIUS_HOSTNAME
-          value: codius.example.com
+          valueFrom:
+            configMapKeyRef:
+              # why won't kustomize add the suffix?
+              name: codius-operator-config
+              key: hostname
         - name: CODIUS_CERT_SECRET
           value: codius-certificate
-        - name: RUNTIME_CLASS_NAME
-          value: kata-qemu
+        # - name: RUNTIME_CLASS_NAME
+        #   value: kata-qemu

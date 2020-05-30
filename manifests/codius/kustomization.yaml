@@ -1,0 +1,27 @@
+bases:
+- github.com/wilsonianb/codius-install/manifests/codius/base?ref=operator
+
+resources:
+- ingress.yaml
+
+configMapGenerator:
+- name: codius-config
+  namespace: default
+  env: config.env
+- name: codius-operator-config
+  namespace: codius-crd-operator-system
+  env: config.env
+
+generatorOptions:
+  # controller-manager deployment wasn't being updated with
+  # codius-operator-config suffix
+  disableNameSuffixHash: true
+
+vars:
+- name: CODIUS_HOSTNAME
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: codius-config
+  fieldref:
+    fieldpath: data.hostname

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codius-web
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: codius-web
+        env:
+        - name: CODIUS_WEB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: codius-config
+              key: host_url
+        - name: PAYMENT_POINTER
+          valueFrom:
+            configMapKeyRef:
+              name: codius-config
+              key: proxy_payment_pointer
+        - name: RECEIPT_VERIFIER_URI
+          valueFrom:
+            configMapKeyRef:
+              name: codius-config
+              key: host_url

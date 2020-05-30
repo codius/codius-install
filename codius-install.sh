@@ -223,53 +223,22 @@ install_update_cert_manager() {
   ${SUDO} ${CURL_C} /tmp/cert-manager.yaml $CERT_MANAGER_URL >>"${LOG_OUTPUT}" 2>&1
   sed -i '/cluster-resource-namespace/a \          - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53' /tmp/cert-manager.yaml
   _exec kubectl apply -f /tmp/cert-manager.yaml
-  sleep 1
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook
 }
 
-# TEMP
-install_update_btp_receiver() {
-  ${SUDO} ${CURL_C} /tmp/btp-receiver.yaml "${K8S_MANIFEST_PATH}/btp-receiver.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/btp-receiver.yaml
-  _exec kubectl apply -f /tmp/btp-receiver.yaml
-  _exec kubectl rollout status deployment btp-receiver
-}
+install_update_codius() {
+  mkdir -p /tmp/codius
+  ${SUDO} ${CURL_C} /tmp/codius/kustomization.yaml "${K8S_MANIFEST_PATH}/codius/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
+  ${SUDO} ${CURL_C} /tmp/codius/ingress.yaml "${K8S_MANIFEST_PATH}/codius/ingress.yaml" >>"${LOG_OUTPUT}" 2>&1
+  tee /tmp/codius/config.env << EOF > /dev/null
+hostname=$HOSTNAME
+host_url=https://$HOSTNAME
+payment_pointer_url=$PAYMENT_POINTER
+proxy_payment_pointer=\$$HOSTNAME
+EOF
 
-install_update_receipt_verifier() {
-  ${SUDO} ${CURL_C} /tmp/receipt-verifier.yaml "${K8S_MANIFEST_PATH}/receipt-verifier.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/receipt-verifier.yaml
-  _exec kubectl apply -f /tmp/receipt-verifier.yaml
-  _exec kubectl rollout status deployment receipt-verifier
-}
-
-install_update_codius_auth() {
-  ${SUDO} ${CURL_C} /tmp/codius-auth.yaml "${K8S_MANIFEST_PATH}/codius-auth.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-auth.yaml
-  _exec kubectl apply -f /tmp/codius-auth.yaml
-  _exec kubectl rollout status deployment codius-auth
-}
-
-install_update_crd_operator() {
-  # _exec kubectl kustomize github.com/wilsonianb/codius-crd-operator/config/default | kubectl apply -f -
-  mkdir -p /tmp/codius-crd-operator
-  ${SUDO} ${CURL_C} /tmp/codius-crd-operator/kustomization.yaml "${K8S_MANIFEST_PATH}/codius-crd-operator/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
-  ${SUDO} ${CURL_C} /tmp/codius-crd-operator/manager_env_patch.yaml "${K8S_MANIFEST_PATH}/codius-crd-operator/manager_env_patch.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-crd-operator/manager_env_patch.yaml
-  _exec kubectl apply -k /tmp/codius-crd-operator
-}
-
-install_update_codius_web() {
-  ${SUDO} ${CURL_C} /tmp/codius-web.yaml "${K8S_MANIFEST_PATH}/codius-web.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-web.yaml
-  _exec kubectl apply -f /tmp/codius-web.yaml
-  _exec kubectl rollout status deployment codius-web
-}
-
-install_update_codius_host_ingress() {
-  ${SUDO} ${CURL_C} /tmp/codius-host-ingress.yaml "${K8S_MANIFEST_PATH}/codius-host-ingress.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-host-ingress.yaml
-  _exec kubectl apply -f /tmp/codius-host-ingress.yaml
+  _exec kubectl apply -k /tmp/codius
 }
 
 # ============================================== Helpers
@@ -344,6 +313,14 @@ install()
         show_message error "Invalid file path entered, try again..."
       fi
     done
+  fi
+
+  # Payment pointer
+  echo "[+] What is your payment pointer URL?"
+  read -p "Payment pointer URL: " -e PAYMENT_POINTER
+  if [[ -z "$PAYMENT_POINTER" ]]; then
+    show_message error "No payment pointer URL entered, exiting..."
+    exit 0
   fi
 
   show_message debug "Setting hostname using 'hostnamectl'"
@@ -470,43 +447,12 @@ EOF
 
   # ============================================== Certificate
 
-  # TEMP
-  install_update_btp_receiver
+  # Codius =============================================
 
-  # Receipt Verifier =============================================
+  show_message info "[+] Installing Codius... "
+  install_update_codius
 
-  show_message info "[+] Installing Receipt Verifier... "
-  install_update_receipt_verifier
-
-  # ============================================= Receipt Verifier
-
-  # Codius Auth =============================================
-
-  show_message info "[+] Installing Codius Auth... "
-  install_update_codius_auth
-
-  # ============================================= Codius Auth
-
-  # CRD Operator =============================================
-
-  show_message info "[+] Installing CRD Operator... "
-  install_update_crd_operator
-
-  # ============================================= CRD Operator
-
-  # Codius web =============================================
-
-  show_message info "[+] Installing Codius web... "
-  install_update_codius_web
-
-  # ============================================= Codius web
-
-  # Codius host ingress =============================================
-
-  show_message info "[+] Installing Codius host ingress... "
-  install_update_codius_host_ingress
-
-  # ============================================= Codius host ingress
+  # ============================================= Codius
 
   # ============================================== Finishing
   new_line

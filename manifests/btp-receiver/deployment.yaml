@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: btp-receiver
+  namespace: default
+  labels:
+    app: btp-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: btp-receiver
+  template:
+    metadata:
+      labels:
+        app: btp-receiver
+    spec:
+      containers:
+      - name: btp-receiver
+        image: wilsonianbcoil/btp-receiver

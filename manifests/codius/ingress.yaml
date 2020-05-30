@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - codius.example.com
+    - $(CODIUS_HOSTNAME)
     secretName: codius-certificate
   rules:
-  - host: codius.example.com
+  - host: $(CODIUS_HOSTNAME)
     http:
       paths:
       - path: /
@@ -42,3 +42,30 @@ spec:
         backend:
           serviceName: kubernetes
           servicePort: 443
+---
+# TEMP
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: btp-receiver
+  namespace: default
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    traefik.frontend.rule.type: PathPrefixStrip
+spec:
+  tls:
+  - hosts:
+    - $(CODIUS_HOSTNAME)
+    secretName: codius-certificate
+  rules:
+  - host: $(CODIUS_HOSTNAME)
+    http:
+      paths:
+      - path: /btp
+        backend:
+          serviceName: btp-receiver
+          servicePort: 3000
+      - path: /spsp
+        backend:
+          serviceName: btp-receiver
+          servicePort: 4000

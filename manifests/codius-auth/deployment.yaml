@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codius-auth
+  namespace: default
+  labels:
+    app: codius-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codius-auth
+  template:
+    metadata:
+      labels:
+        app: codius-auth
+    spec:
+      containers:
+      - name: codius-auth
+        image: wilsonianbcoil/codius-auth
+        env:
+        - name: AUTH_PRICE
+          value: "1"
+        - name: RBAC_USER
+          value: codius-deployer
