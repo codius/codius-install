@@ -12,3 +12,19 @@ patchesStrategicMerge:
 - codius_auth_env_patch.yaml
 - codius_web_env_patch.yaml
 - receipt_verifier_env_patch.yaml
+
+patchesJson6902:
+- target:
+    version: v1
+    group: rbac.authorization.k8s.io
+    kind: Role
+    name: manager-role
+    namespace: codius-crd-operator-system
+  path: replace_role_namespace.yaml
+- target:
+    version: v1
+    group: rbac.authorization.k8s.io
+    kind: RoleBinding
+    name: manager-rolebinding
+    namespace: codius-crd-operator-system
+  path: replace_rolebinding_namespace.yaml
