@@ -33,13 +33,14 @@ CURL_C="curl -SL -o"
 LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
-INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/operator/codius-install.sh"
-K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/operator/manifests"
+INSTALLER_BRANCH="operator"
+INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
+K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/manifests"
 ########## k3s ##########
 K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.18.2+k3s1/install.sh"
 K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
 ########## Calico ##########
-CALICO_URL="https://docs.projectcalico.org/v3.12/manifests/calico-policy-only.yaml"
+CALICO_BASE="github.com/wilsonianb/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
 CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml"
 ########## Constant ##########
@@ -187,8 +188,15 @@ install_update_k3s() {
   ${SUDO} ${CURL_C} /var/tmp/authentication-token-webhook-config.yaml "${K8S_MANIFEST_PATH}/authentication-token-webhook-config.yaml" >>"${LOG_OUTPUT}" 2>&1
   sed -i s/codius.example.com/$HOSTNAME/g /var/tmp/authentication-token-webhook-config.yaml
   local INSTALL_K3S_VERSION="${K3S_VERSION}"
-  _exec bash /tmp/k3s-install.sh --cluster-cidr=192.168.0.0/16 --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
+  _exec bash /tmp/k3s-install.sh \
+    --cluster-cidr=192.168.0.0/16 \
+    --flannel-backend=none \
+    --disable-network-policy \
+    --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
+    --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
   sleep 10
+  _exec kubectl apply -k $CALICO_BASE
+  _exec kubectl rollout status ds -n kube-system calico-node
   _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
   _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
   _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
@@ -206,12 +214,6 @@ install_update_kata() {
   _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
   _exec kubectl rollout status ds -n kube-system kata-deploy
   _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/k8s-1.14/kata-qemu-runtimeClass.yaml
-}
-
-install_update_calico() {
-  _exec kubectl apply -f $CALICO_URL
-  sleep 5
-  _exec kubectl rollout status ds -n kube-system calico-node
 }
 
 install_update_acme_dns() {
@@ -368,15 +370,12 @@ EOF
 
   # Kubernetes ==============================================
 
-  show_message info "[+] Installing k3s... "
+  show_message info "[+] Installing k3s with Calico CNI... "
   install_update_k3s
   update_traefik
 
   show_message info "[+] Installing Kata Containers... "
   install_update_kata
-
-  show_message info "[+] Installing Calico policy enforcement... "
-  # install_update_calico
 
   # ============================================== Kubernetes
 
@@ -482,9 +481,6 @@ update()
 
   show_message info "[+] Updating Kata Containers... "
   install_update_kata
-
-  show_message info "[+] Updating Calico policy enforcement... "
-  install_update_calico
 
   show_message info "[+] Updating acme-dns... "
   install_update_acme_dns

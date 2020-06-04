@@ -20,11 +20,34 @@ patchesJson6902:
     kind: Role
     name: manager-role
     namespace: codius-crd-operator-system
-  path: replace_role_namespace.yaml
+  path: replace_namespace.yaml
 - target:
     version: v1
     group: rbac.authorization.k8s.io
     kind: RoleBinding
     name: manager-rolebinding
     namespace: codius-crd-operator-system
-  path: replace_rolebinding_namespace.yaml
+  path: replace_namespace.yaml
+- target:
+    version: v1
+    group: networking.k8s.io
+    kind: NetworkPolicy
+    name: deny-internal-egress
+    namespace: codius-crd-operator-system
+  path: replace_namespace.yaml
+
+vars:
+- name: HELLO_SVC_NAME
+  objref:
+    kind: Service
+    version: v1
+    name: hello
+  fieldref:
+    fieldpath: metadata.name
+- name: HELLO_SVC_NAMESPACE
+  objref:
+    kind: Service
+    version: v1
+    name: hello
+  fieldref:
+    fieldpath: metadata.namespace

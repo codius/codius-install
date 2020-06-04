@@ -1,0 +1,7 @@
+resources:
+# https://docs.projectcalico.org/manifests/calico.yaml
+# with
+# "container_settings": {
+#   "allow_ip_forwarding": true
+# }
+- calico.yaml

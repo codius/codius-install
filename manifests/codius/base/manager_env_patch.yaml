@@ -19,6 +19,8 @@ spec:
               key: hostname
         - name: CODIUS_CERT_SECRET
           value: codius-certificate
+        - name: CODIUS_HELLO_SVC_URL
+          value: $(HELLO_SVC_NAME).$(HELLO_SVC_NAMESPACE)
         - name: CODIUS_NAMESPACE
           value: codius
         # - name: RUNTIME_CLASS_NAME
