@@ -23,5 +23,5 @@ spec:
           value: $(HELLO_SVC_NAME).$(HELLO_SVC_NAMESPACE)
         - name: CODIUS_NAMESPACE
           value: codius
-        # - name: RUNTIME_CLASS_NAME
-        #   value: kata-qemu
+        - name: RUNTIME_CLASS_NAME
+          value: kata-qemu

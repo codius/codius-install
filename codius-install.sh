@@ -195,7 +195,10 @@ install_update_k3s() {
     --disable traefik \
     --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
     --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
-  sleep 10
+  until kubectl get node > /dev/null 2>&1 || (( k3s_count++ >= 10 ))
+  do
+    sleep 1
+  done
   _exec kubectl apply -k $CALICO_BASE
   _exec kubectl rollout status ds -n kube-system calico-node
 
@@ -205,8 +208,11 @@ install_update_k3s() {
   # Otherwise, restarting k3s reverts changes to the traefik helm config
   sed -i '/ssl:/a \      insecureSkipVerify: true' /tmp/traefik.yaml
   _exec cp /tmp/traefik.yaml /var/lib/rancher/k3s/server/manifests/traefik-mod.yaml
-  sleep 5
   _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
+  until kubectl get job -n kube-system helm-install-traefik > /dev/null 2>&1 || (( traefik_count++ >= 30 ))
+  do
+    sleep 1
+  done
   _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
   _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
 }
@@ -215,6 +221,12 @@ install_update_kata() {
   _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-rbac/base
   _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
   _exec kubectl rollout status ds -n kube-system kata-deploy
+  # wait for k3s to restart
+  while kubectl logs --selector=name=kata-deploy -n kube-system -f > /dev/null 2>&1; do true; done
+  until kubectl get node > /dev/null 2>&1 || (( count++ >= 10 ))
+  do
+    sleep 1
+  done
   _exec kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/k8s-1.14/kata-qemu-runtimeClass.yaml
 }
 
@@ -241,8 +253,11 @@ host_url=https://$HOSTNAME
 payment_pointer_url=$PAYMENT_POINTER
 proxy_payment_pointer=\$$HOSTNAME
 EOF
-
   _exec kubectl apply -k /tmp/codius
+  _exec kubectl wait --for=condition=Available -n default deployment/codius-auth
+  _exec kubectl wait --for=condition=Available -n default deployment/codius-web
+  _exec kubectl wait --for=condition=Available -n default deployment/receipt-verifier
+  _exec kubectl wait --for=condition=Available -n codius-crd-operator-system deployment/codius-crd-operator-controller-manager
 }
 
 # ============================================== Helpers
