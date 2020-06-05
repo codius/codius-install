@@ -37,8 +37,9 @@ INSTALLER_BRANCH="operator"
 INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
 K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/manifests"
 ########## k3s ##########
-K3S_URL="https://raw.githubusercontent.com/rancher/k3s/v1.18.2+k3s1/install.sh"
-K3S_VERSION=`echo "$K3S_URL" | grep -Po 'v\d+.\d+.\d+'`
+K3S_VERSION="v1.18.3+k3s1"
+K3S_INSTALL_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/install.sh"
+K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/manifests/traefik.yaml"
 ########## Calico ##########
 CALICO_BASE="github.com/wilsonianb/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
@@ -102,7 +103,7 @@ function spin_wait() {
     local spinstr=$tmp${spinstr%"$tmp"}
     sleep ${SPIN_DELAY}
   done
-  printf "\033[3D\033[K ${LIGHT}${GREEN}Done ${RESET}"
+  printf "\033[3D\033[K ${LIGHT}${GREEN}✓ ${RESET}"
   # printf "\r\033[K"
 }
 
@@ -184,27 +185,28 @@ check_user() {
 }
 
 install_update_k3s() {
-  ${SUDO} ${CURL_C} /tmp/k3s-install.sh ${K3S_URL} >>"${LOG_OUTPUT}" 2>&1 && ${SUDO} chmod a+x /tmp/k3s-install.sh
+  ${SUDO} ${CURL_C} /tmp/k3s-install.sh ${K3S_INSTALL_URL} >>"${LOG_OUTPUT}" 2>&1 && ${SUDO} chmod a+x /tmp/k3s-install.sh
   ${SUDO} ${CURL_C} /var/tmp/authentication-token-webhook-config.yaml "${K8S_MANIFEST_PATH}/authentication-token-webhook-config.yaml" >>"${LOG_OUTPUT}" 2>&1
   sed -i s/codius.example.com/$HOSTNAME/g /var/tmp/authentication-token-webhook-config.yaml
-  local INSTALL_K3S_VERSION="${K3S_VERSION}"
   _exec bash /tmp/k3s-install.sh \
     --cluster-cidr=192.168.0.0/16 \
     --flannel-backend=none \
     --disable-network-policy \
+    --disable traefik \
     --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
     --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
   sleep 10
   _exec kubectl apply -k $CALICO_BASE
   _exec kubectl rollout status ds -n kube-system calico-node
-  _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
-  _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
-  _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
-}
 
-update_traefik() {
+  ${SUDO} ${CURL_C} /tmp/traefik.yaml $K3S_TRAEFIK_URL >>"${LOG_OUTPUT}" 2>&1
   # Allow ingress for kube apiserver
-  sed -i '/ssl:/a \      insecureSkipVerify: true' /var/lib/rancher/k3s/server/manifests/traefik.yaml
+  # Manually add traefik helm config and run k3s with --disable traefik
+  # Otherwise, restarting k3s reverts changes to the traefik helm config
+  sed -i '/ssl:/a \      insecureSkipVerify: true' /tmp/traefik.yaml
+  _exec cp /tmp/traefik.yaml /var/lib/rancher/k3s/server/manifests/traefik-mod.yaml
+  sleep 5
+  _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
   _exec kubectl wait --for=condition=complete --timeout=300s -n kube-system job/helm-install-traefik
   _exec kubectl wait --for=condition=Available -n kube-system deployment/traefik
 }
@@ -372,7 +374,6 @@ EOF
 
   show_message info "[+] Installing k3s with Calico CNI... "
   install_update_k3s
-  update_traefik
 
   show_message info "[+] Installing Kata Containers... "
   install_update_kata
