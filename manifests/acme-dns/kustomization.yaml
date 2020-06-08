@@ -1,0 +1,29 @@
+bases:
+- github.com/wilsonianb/codius-install/manifests/acme-dns/base?ref=operator
+
+patchesStrategicMerge:
+- acme_dns_config_patch.yaml
+
+configMapGenerator:
+- name: acme-dns-config-env
+  namespace: default
+  env: config.env
+
+vars:
+- name: HOSTNAME
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: acme-dns-config-env
+  fieldref:
+    fieldpath: data.hostname
+- name: IP
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: acme-dns-config-env
+  fieldref:
+    fieldpath: data.ip_address
+
+configurations:
+- kustomizeconfig.yaml

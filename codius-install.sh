@@ -231,7 +231,15 @@ install_update_kata() {
 }
 
 install_update_acme_dns() {
-  _exec kubectl apply -f "${K8S_MANIFEST_PATH}/acme-dns.yaml"
+  local ACME_DNS_DIR=`mktemp -d -t acmedns.XXXX`
+  ${SUDO} ${CURL_C} $ACME_DNS_DIR/kustomization.yaml "${K8S_MANIFEST_PATH}/acme-dns/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
+  ${SUDO} ${CURL_C} $ACME_DNS_DIR/kustomizeconfig.yaml "${K8S_MANIFEST_PATH}/acme-dns/kustomizeconfig.yaml" >>"${LOG_OUTPUT}" 2>&1
+  ${SUDO} ${CURL_C} $ACME_DNS_DIR/acme_dns_config_patch.yaml "${K8S_MANIFEST_PATH}/acme-dns/acme_dns_config_patch.yaml" >>"${LOG_OUTPUT}" 2>&1
+  tee $ACME_DNS_DIR/config.env << EOF > /dev/null
+hostname=$HOSTNAME
+ip_address=$IP
+EOF
+  _exec kubectl apply -k $ACME_DNS_DIR
   _exec kubectl wait --for=condition=Available --timeout=60s -n acme-dns deployment/acme-dns
 }
 
@@ -404,17 +412,6 @@ EOF
 
   if [[ -z "$CERTFILE" ]]; then
     show_message info "[+] Installing acme-dns... "
-
-    ${SUDO} ${CURL_C} /tmp/config.cfg https://raw.githubusercontent.com/joohoi/acme-dns/master/config.cfg >>"${LOG_OUTPUT}" 2>&1
-    sed -i s/auth.example.org/acme.$HOSTNAME/g /tmp/config.cfg
-    sed -i s/127.0.0.1/0.0.0.0/g /tmp/config.cfg
-    sed -i 's/protocol = "both"/protocol = "udp"/g' /tmp/config.cfg
-    sed -i s/198.51.100.1/`ifconfig $(route -n | grep ^0.0.0.0 | awk '{print $NF}') | grep inet | grep -v inet6 | awk '{print $2}'`/g /tmp/config.cfg
-    sed -i 's/tls = "letsencryptstaging"/tls = "none"/g' /tmp/config.cfg
-    sed -i 's/port = "443"/port = "80"/g' /tmp/config.cfg
-
-    _exec kubectl create namespace acme-dns
-    _exec kubectl create configmap acme-dns-config --namespace=acme-dns --from-file=/tmp/config.cfg
     install_update_acme_dns
 
     show_message info "[+] Generating certificate for ${HOSTNAME}"

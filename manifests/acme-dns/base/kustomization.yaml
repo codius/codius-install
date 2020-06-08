@@ -1,0 +1,12 @@
+namespace: acme-dns
+
+resources:
+- namespace.yaml
+- persistentvolumeclaim.yaml
+- deployment.yaml
+- service.yaml
+
+configMapGenerator:
+- name: acme-dns-config
+  files:
+  - config.cfg
