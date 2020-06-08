@@ -1,7 +1,10 @@
 resources:
 # https://docs.projectcalico.org/manifests/calico.yaml
-# with
+- calico.yaml
+
+patchesStrategicMerge:
+# adds
 # "container_settings": {
 #   "allow_ip_forwarding": true
 # }
-- calico.yaml
+- allow_ip_forwarding_patch.yaml
