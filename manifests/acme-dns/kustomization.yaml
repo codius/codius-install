@@ -1,5 +1,5 @@
 bases:
-- github.com/wilsonianb/codius-install/manifests/acme-dns/base?ref=operator
+- github.com/wilsonianb/codius-install/manifests/acme-dns/base
 
 patchesStrategicMerge:
 - acme_dns_config_patch.yaml

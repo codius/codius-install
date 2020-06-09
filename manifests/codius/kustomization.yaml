@@ -1,5 +1,5 @@
 bases:
-- github.com/wilsonianb/codius-install/manifests/codius/base?ref=operator
+- github.com/wilsonianb/codius-install/manifests/codius/base
 
 resources:
 - ingress.yaml
