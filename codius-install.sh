@@ -56,6 +56,7 @@ RESET=`tput sgr0`
 #Error Message#Error Message
 ERR_ROOT_PRIVILEGE_REQUIRED=(10 "This install script need root privilege, please retry use 'sudo' or root user!")
 ERR_NOT_PUBLIC_IP=(11 "You need a public IP to run Codius!")
+ERR_NOT_SUPPORT_DISTRO=(21 "Sorry, the installer only supports centos/ubuntu/debian/fedora.")
 ERR_UNKNOWN_MSG_TYPE=98
 ERR_UNKNOWN=99
 # Helpers ==============================================
@@ -357,10 +358,12 @@ install()
 
   show_message info "[+] Installing git..."
 
-  if [[ "${LSB_DISTRO}" == "centos"  ]] || [[ "${LSB_DISTRO}" == "fedora"  ]] ;then
+  if (command_exist yum);then
     _exec "yum install -y git"
-  elif [[ "${LSB_DISTRO}" == "ubuntu" ]] || [[ "${LSB_DISTRO}" == "debian" ]] ;then
+  elif (command_exist apt-get);then
     _exec "apt-get install -y git"
+  else
+    show_message error "${ERR_NOT_SUPPORT_DISTRO[1]}" && exit ${ERR_NOT_SUPPORT_DISTRO[0]}
   fi
 
   # ============================================== git
