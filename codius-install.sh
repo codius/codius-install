@@ -515,7 +515,7 @@ clean(){
   check_user
 
   show_message warn "This action will remove packages listed below and all configuration files belonging to them:
-  \n* k3s\n* Kata Containers\n* Codiusd"
+  \n* k3s\n* Kata Containers\n* Codius"
 
   new_line
   read -p "Continue Anyway? [y/N]: " -e CONTINUE
@@ -524,9 +524,16 @@ clean(){
     exit 0
   fi
 
-  show_message info "[!] Stopping services... "
+  show_message info "[!] Stopping Codius services... "
+  _exec kubectl delete services.core.codius.org --all=true
+  while kubectl wait --for=delete pods -n codius --all=true > /dev/null 2>&1; do true; done
 
-  ${SUDO} /usr/local/bin/k3s-uninstall.sh
+  show_message info "[!] Removing Kata Containers... "
+  _exec kubectl delete -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
+  while kubectl wait --for=delete pod -n kube-system --selector=name=kata-deploy > /dev/null 2>&1; do true; done
+
+  show_message info "[!] Removing k3s... "
+  _exec /usr/local/bin/k3s-uninstall.sh
 
   printf "\n\n"
   show_message done "[*] Everything cleaned successfully!"
