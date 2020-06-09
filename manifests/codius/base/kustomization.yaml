@@ -4,8 +4,6 @@ bases:
 - github.com/wilsonianb/codius-install/manifests/codius-auth?ref=operator
 - github.com/wilsonianb/codius-install/manifests/codius-web?ref=operator
 - github.com/wilsonianb/codius-install/manifests/receipt-verifier?ref=operator
-# temp
-- github.com/wilsonianb/codius-install/manifests/btp-receiver?ref=operator
 
 patchesStrategicMerge:
 - manager_env_patch.yaml
