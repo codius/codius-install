@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: codius-host
+  namespace: default
+spec:
+  secretName: codius-host-cert
+  issuerRef:
+    name: $(ISSUER_NAME)
+    kind: ClusterIssuer
+  commonName: $(CODIUS_HOSTNAME)
+  dnsNames:
+  - $(CODIUS_HOSTNAME)
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: codius-host-wildcard
+  namespace: codius
+spec:
+  secretName: codius-host-wildcard-cert
+  issuerRef:
+    name: $(ISSUER_NAME)
+    kind: ClusterIssuer
+  commonName: "*.$(CODIUS_HOSTNAME)"
+  dnsNames:
+  - "*.$(CODIUS_HOSTNAME)"

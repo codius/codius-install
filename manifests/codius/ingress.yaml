@@ -9,7 +9,7 @@ spec:
   tls:
   - hosts:
     - $(CODIUS_HOSTNAME)
-    secretName: codius-certificate
+    secretName: codius-host-cert
   rules:
   - host: $(CODIUS_HOSTNAME)
     http:
@@ -56,7 +56,7 @@ spec:
   tls:
   - hosts:
     - $(CODIUS_HOSTNAME)
-    secretName: codius-certificate
+    secretName: codius-host-cert
   rules:
   - host: $(CODIUS_HOSTNAME)
     http:

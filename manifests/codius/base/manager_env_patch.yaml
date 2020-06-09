@@ -14,11 +14,10 @@ spec:
         - name: CODIUS_HOSTNAME
           valueFrom:
             configMapKeyRef:
-              # why won't kustomize add the suffix?
               name: codius-operator-config
               key: hostname
         - name: CODIUS_CERT_SECRET
-          value: codius-certificate
+          value: codius-host-wildcard-cert
         - name: CODIUS_HELLO_SVC_URL
           value: $(HELLO_SVC_NAME).$(HELLO_SVC_NAMESPACE)
         - name: CODIUS_NAMESPACE

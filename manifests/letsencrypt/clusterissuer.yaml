@@ -1,12 +1,11 @@
 apiVersion: cert-manager.io/v1alpha2
-kind: Issuer
+kind: ClusterIssuer
 metadata:
   name: letsencrypt
-  namespace: codius
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: yourname@codius.example.com
+    email: $(EMAIL)
     privateKeySecretRef:
       name: account-private-key-secret
     solvers:
@@ -14,5 +13,5 @@ spec:
         acmedns:
           host: http://acme-dns.acme-dns
           accountSecretRef:
-            name: certmanager-secret
+            name: acme-dns-solver
             key: acme-dns.json

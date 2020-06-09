@@ -416,45 +416,45 @@ EOF
 
     show_message info "[+] Generating certificate for ${HOSTNAME}"
 
+    # https://cert-manager.io/docs/configuration/acme/dns01/acme-dns/
     local ACME_DNS_IP=`kubectl get pods --namespace=acme-dns --selector=app=acme-dns -o jsonpath='{.items[0].status.podIP}'`
     local ACME_CREDS=`curl -sX POST http://$ACME_DNS_IP/register`
-    tee /tmp/acme-dns.json << EOF > /dev/null
+    local CERT_DIR=`mktemp -d -t codius-certs.XXXX`
+
+    tee $CERT_DIR/acme-dns.json << EOF > /dev/null
 {"$HOSTNAME": $ACME_CREDS, "*.$HOSTNAME": $ACME_CREDS}
 EOF
 
-    local ACME_FULL_DOMAIN=`sed -e 's/[{}]/''/g' /tmp/acme-dns.json | awk -v RS=',"' -F: '/^fulldomain/ {print $2; exit;}' | tr -d \"`
+    local ACME_FULL_DOMAIN=`sed -e 's/[{}]/''/g' $CERT_DIR/acme-dns.json | awk -v RS=',"' -F: '/^fulldomain/ {print $2; exit;}' | tr -d \"`
     new_line
     show_message info "[+] Please create an NS and CNAME record within your domain DNS like the examples below:"
     new_line
     cat <<EOF
 ------------------------------------------------------------
 
-acme.$HOSTNAME.            300     IN      NS         $HOSTNAME
+auth.$HOSTNAME.            300     IN      NS         $HOSTNAME
 _acme-challenge.$HOSTNAME. 300     IN      CNAME      $ACME_FULL_DOMAIN
 
 ------------------------------------------------------------
 EOF
-
     read -n1 -r -p "Press any key to continue..."
 
-    _exec kubectl create secret generic certmanager-secret --namespace=codius --from-file=/tmp/acme-dns.json
-
-    ${SUDO} ${CURL_C} /tmp/codius-host-issuer.yaml "${K8S_MANIFEST_PATH}/codius-host-issuer.yaml" >>"${LOG_OUTPUT}" 2>&1
-    sed -i s/yourname@codius.example.com/$EMAIL/g /tmp/codius-host-issuer.yaml
-    _exec kubectl apply -f /tmp/codius-host-issuer.yaml
-    _exec kubectl wait --for=condition=Ready --timeout=60s -n codius issuer/letsencrypt
-
-    ${SUDO} ${CURL_C} /tmp/codius-host-certificate.yaml "${K8S_MANIFEST_PATH}/codius-host-certificate.yaml" >>"${LOG_OUTPUT}" 2>&1
-    sed -i s/codius.example.com/$HOSTNAME/g /tmp/codius-host-certificate.yaml
-    _exec kubectl apply -f /tmp/codius-host-certificate.yaml
-    _exec kubectl wait --for=condition=Ready --timeout=600s -n codius certificate/codius-host-certificate
-    # FIXME: sync tls secret between codius and default namespaces
-    _exec kubectl get secret -n codiusd codiusd-certificate -o go-template='{{ index .data "tls.crt" | base64decode }}' > /tmp/tls.crt
-    _exec kubectl get secret -n codiusd codiusd-certificate -o go-template='{{ index .data "tls.key" | base64decode }}' > /tmp/tls.key
-    _exec kubectl create secret tls codius-certificate --key /tmp/tls.key --cert /tmp/tls.crt
+    show_message info "[+] Generating Let's Encrypt certificates... "
+    ${SUDO} ${CURL_C} $CERT_DIR/kustomization.yaml "${K8S_MANIFEST_PATH}/letsencrypt/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
+    ${SUDO} ${CURL_C} $CERT_DIR/kustomizeconfig.yaml "${K8S_MANIFEST_PATH}/letsencrypt/kustomizeconfig.yaml" >>"${LOG_OUTPUT}" 2>&1
+    ${SUDO} ${CURL_C} $CERT_DIR/clusterissuer.yaml "${K8S_MANIFEST_PATH}/letsencrypt/clusterissuer.yaml" >>"${LOG_OUTPUT}" 2>&1
+    ${SUDO} ${CURL_C} $CERT_DIR/certificate.yaml "${K8S_MANIFEST_PATH}/letsencrypt/certificate.yaml" >>"${LOG_OUTPUT}" 2>&1
+    tee $CERT_DIR/config.env << EOF > /dev/null
+hostname=$HOSTNAME
+email=$EMAIL
+EOF
+    _exec kubectl apply -k $CERT_DIR
+    _exec kubectl wait --for=condition=Ready --timeout=60s -n codius clusterissuer/letsencrypt
+    _exec kubectl wait --for=condition=Ready --timeout=600s -n codius certificate/codius-host-wildcard
+    _exec kubectl wait --for=condition=Ready --timeout=600s certificate/codius-host
   else
-    _exec kubectl create secret tls codius-certificate --key $KEYFILE --cert $CERTFILE --namespace codius
-    _exec kubectl create secret tls codius-certificate --key $KEYFILE --cert $CERTFILE
+    _exec kubectl create secret tls codius-host-wildcard-cert --key $KEYFILE --cert $CERTFILE --namespace codius
+    _exec kubectl create secret tls codius-host-cert --key $KEYFILE --cert $CERTFILE
   fi
 
   # ============================================== Certificate
