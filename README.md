@@ -6,4 +6,4 @@ This script will let you set up your own Codius host in minutes, even if you hav
 ### Installation
 Run the script and follow the assistant:
 
-`wget https://raw.githubusercontent.com/wilsonianb/codius-install/master/codius-install.sh -O codius-install.sh && bash codius-install.sh`
+`wget https://raw.githubusercontent.com/codius/codius-install/master/codius-install.sh -O codius-install.sh && bash codius-install.sh`

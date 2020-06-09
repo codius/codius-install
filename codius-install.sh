@@ -34,16 +34,16 @@ LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
 INSTALLER_BRANCH="master"
-INSTALLER_URL="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
-K8S_MANIFEST_PATH="https://raw.githubusercontent.com/wilsonianb/codius-install/${INSTALLER_BRANCH}/manifests"
+INSTALLER_URL="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
+K8S_MANIFEST_PATH="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/manifests"
 ########## k3s ##########
 K3S_VERSION="v1.18.3+k3s1"
 K3S_INSTALL_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/install.sh"
 K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/manifests/traefik.yaml"
 ########## Calico ##########
-CALICO_BASE="github.com/wilsonianb/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
+CALICO_BASE="github.com/codius/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
-CERT_MANAGER_BASE="github.com/wilsonianb/codius-install/manifests/cert-manager?ref=${INSTALLER_BRANCH}"
+CERT_MANAGER_BASE="github.com/codius/codius-install/manifests/cert-manager?ref=${INSTALLER_BRANCH}"
 ########## Constant ##########
 #Color Constant
 RED=`tput setaf 1`
