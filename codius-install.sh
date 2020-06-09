@@ -54,7 +54,7 @@ WHITE=`tput setaf 7`
 LIGHT=`tput bold `
 RESET=`tput sgr0`
 #Error Message#Error Message
-ERR_ROOT_PRIVILEGE_REQUIRED=(10 "This install script need root privilege, please retry use 'sudo' or root user!")
+ERR_ROOT_PRIVILEGE_REQUIRED=(10 "This install script needs root privilege, please retry using 'sudo' or root user!")
 ERR_NOT_PUBLIC_IP=(11 "You need a public IP to run Codius!")
 ERR_NOT_SUPPORT_DISTRO=(21 "Sorry, the installer only supports centos/ubuntu/debian/fedora.")
 ERR_UNKNOWN_MSG_TYPE=98
@@ -72,8 +72,8 @@ cat <<"EOF"
     \____\___/ \__,_|_|\__,_|___/ |___|_| |_|___/\__\__,_|_|_|\___|_|   
 
 
-This script will let you setup your own Codius host in minutes,
-even if you haven't used codius before. 
+This script will let you set up your own Codius host in minutes,
+even if you haven't used Codius before.
 It has been designed to be as unobtrusive and universal as possible.
 
 EOF
@@ -349,24 +349,8 @@ install()
     exit 0
   fi
 
-  show_message debug "Setting hostname using 'hostnamectl'"
   # Set hostname
   ${SUDO} hostnamectl set-hostname $HOSTNAME
-
-
-  # git ====================================
-
-  show_message info "[+] Installing git..."
-
-  if (command_exist yum);then
-    _exec "yum install -y git"
-  elif (command_exist apt-get);then
-    _exec "apt-get install -y git"
-  else
-    show_message error "${ERR_NOT_SUPPORT_DISTRO[1]}" && exit ${ERR_NOT_SUPPORT_DISTRO[0]}
-  fi
-
-  # ============================================== git
 
   # Subdomain DNS ==============================================
   new_line
@@ -393,6 +377,20 @@ EOF
   done
 
   # ============================================== Subdomain DNS
+
+  # git ====================================
+
+  show_message info "[+] Installing git..."
+
+  if (command_exist yum);then
+    _exec "yum install -y git"
+  elif (command_exist apt-get);then
+    _exec "apt-get install -y git"
+  else
+    show_message error "${ERR_NOT_SUPPORT_DISTRO[1]}" && exit ${ERR_NOT_SUPPORT_DISTRO[0]}
+  fi
+
+  # ============================================== git
 
   # Kubernetes ==============================================
 
@@ -473,7 +471,7 @@ EOF
   new_line
   show_message done "[!] Congratulations, it looks like you installed Codius successfully!"
   new_line
-  show_message done "[-] You can check your Codius by opening https://$HOSTNAME"
+  show_message done "[-] You can visit your Codius host at https://$HOSTNAME"
   show_message done "[-] For installation log visit $LOG_OUTPUT"
   show_message done "[-] You can see everything running in your Kubernetes cluster by running: kubectl get all --all-namespaces"
   new_line
@@ -546,142 +544,6 @@ clean(){
 }
 
 
-################### DEBUG ###########################
-debug(){
-
-  # active debug for commands
-  export DEBUG=*
-  # get hostname
-  local HOSTNAME=$(hostname)
-  # some env variables
-  export CODIUS_PUBLIC_URI=https://$HOSTNAME
-
-
-  local services=( hyperd codiusd nginx )
-  local commands=( node npm hyperd hyperctl codiusd certbot )
-  local debug_commands=('node -v ; npm -v ; yarn -v'
-    'hyperd run -t test /bin/sh'
-    'hyperctl info'
-    'hyperctl list'
-    'codiusd'
-    'netstat -tulpn'
-  )
-
-
-  new_line
-  # check for codius avaiblity throught URL
-  status="$(curl -Is https://${HOSTNAME}/version | head -1)"
-  if [[ $status ]]; then
-    validate=( $status )
-    if [ ${validate[-2]} == "200" ]; then
-        show_message success "[*] It looks likes Codius is running properly in your host."
-        new_line
-        read -p "Continue Anyway ? [y/N]: " -e CONTINUE
-
-        if ! [[ "$CONTINUE" = 'y' || "$CONTINUE" = 'Y' ]]; then
-          exit 0
-        fi
-
-    else
-        show_message warn "It looks like Codius is not running as expected ..."
-    fi
-  else
-     show_message warn "It looks like Codius is not running as expected..."
-  fi
-
-
-  show_message info "[+] Start Debuging ..."
-  printf "\n\n"
-  _box "Checking required installed packages"
-  new_line
-  echo "------------------------------------------"
-  printf "%-20s %-5s\n" "PACKAGE" "STATUS"
-  echo "------------------------------------------"
-  for i in "${commands[@]}"
-  do
-    printf "%-20s %-5s" $i $(echo_if $(program_is_installed $i))
-    printf "\n"
-  done
-
-  new_line
-  _box "Checking required running services"
-  new_line
-  echo "------------------------------------------"
-  printf "%-20s %-5s\n" "SERVICE" "STATUS"
-  echo "------------------------------------------"
-  for i in "${services[@]}"
-  do
-    printf "%-20s %-5s" $i $(echo_if $(service_is_running $i))
-    printf "\n"
-  done
-
-
-  show_message info "[?] Creating full services log file?"
-  show_message warn "With this action all Codius services will restart for debuging."
-  new_line
-  read -p "Do you want to continue ? [y/N]: " -e DEBUG
-  if ! [[ "$DEBUG" = 'y' || "$DEBUG" = 'Y' ]]; then
-    exit 0
-  fi
-
-
-  local TMPFILE="/tmp/codius_debug-$(date +%Y-%m-%d.%H-%M)"
-
-  show_message info "[!] Stopping services... "
-  for i in "${services[@]}"
-  do
-    if [[ "${INIT_SYSTEM}" == "systemd" ]];then
-      ${SUDO} systemctl stop $i >>"${TMPFILE}" 2>&1 
-    else 
-      ${SUDO} service $i stop >>"${TMPFILE}" 2>&1
-    fi
- done
-
-  show_message info "[!] Execute services and commands in debug mode ... "
-  show_message info "[*] This will take some time..."
-  for c in "${debug_commands[@]}"
-  do
-    echo -e "\n==================================" >> "${TMPFILE}"
-    echo "${c}" >> "${TMPFILE}"
-    echo -e "==================================\n" >> "${TMPFILE}"
-    exec 3>$(tty)
-      exec 3>&-
-
-    eval "${SUDO} bash -c '${c}'" >>"${TMPFILE}" 2>&1  &
-    sleep 20
-    exec 3>&-
-  done
-
-  show_message info "[!] Killing debug process..."
-  commands_to_kill=(codiusd hyperd)
-  for p in "${commands_to_kill[@]}"
-  do
-    ${SUDO} kill -9 $(ps -ef|grep $p |grep -v "grep"|awk '{print $2}') || true
-  done
-
-  show_message info "[+] Starting services... "
-  for i in "${services[@]}"
-  do
-    if [[ "${INIT_SYSTEM}" == "systemd" ]];then
-      ${SUDO} systemctl restart $i >>"${TMPFILE}" 2>&1 || true
-    else 
-      ${SUDO} service $i restart >>"${TMPFILE}" 2>&1 || true
-    fi
-  done
-
-  new_line
-  printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' =
-  show_message done "[!] The debuging proccess is done."
-  new_line
-  show_message done "[-] Please check $TMPFILE for full log output ."
-  printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' =
-
-
-  exit
-
-}
-
-
 ################### CHECK FOR SCRIPT UPDATES ###########################
 
 check_script_update() {
@@ -690,7 +552,7 @@ check_script_update() {
   LASTED_MOD=$(grep -m1 '# Last Modified Date: ' <<<"$LATEST_FILE")
 
   if [[ "$THIS_MOD" != "$LASTED_MOD" ]] &&  [[ ! -n "$curlFailed" ]]; then
-    show_message info "[!] An update is available For the script... "
+    show_message info "[!] An update is available for the script... "
     read -p "Update Now ? [y/N]: " -e UPDATE
 
     if [[ "$UPDATE" = 'y' || "$UPDATE" = 'Y' ]]; then
@@ -720,18 +582,16 @@ do
 
   echo "What do you want to do?"
                   echo "   1) Install and run Codius in your system"
-                  # echo "   2) Check your system for Codius errors"
-                  echo "   2) Cleanup the codius from the server"
-                  echo "   3) Update Codius host components to the latest versions"
-                  echo "   4) Exit"
-  read -p "Select an option [1-4]: " option
+                  echo "   2) Cleanup Codius from the server"
+                  # echo "   3) Update Codius host components to the latest versions"
+                  echo "   3) Exit"
+  read -p "Select an option [1-3]: " option
 
   case $option in
     1)install;;
-    # 2)debug;;
     2)clean;;
-    3)update;;
-    4)exit;;
+    # 3)update;;
+    3)exit;;
   esac
 done
 
