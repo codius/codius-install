@@ -43,7 +43,7 @@ K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/ma
 ########## Calico ##########
 CALICO_BASE="github.com/wilsonianb/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
-CERT_MANAGER_URL="https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml"
+CERT_MANAGER_BASE="github.com/wilsonianb/codius-install/manifests/cert-manager?ref=${INSTALLER_BRANCH}"
 ########## Constant ##########
 #Color Constant
 RED=`tput setaf 1`
@@ -244,9 +244,7 @@ EOF
 }
 
 install_update_cert_manager() {
-  ${SUDO} ${CURL_C} /tmp/cert-manager.yaml $CERT_MANAGER_URL >>"${LOG_OUTPUT}" 2>&1
-  sed -i '/cluster-resource-namespace/a \          - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53' /tmp/cert-manager.yaml
-  _exec kubectl apply -f /tmp/cert-manager.yaml
+  _exec kubectl apply -k $CERT_MANAGER_BASE
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager
   _exec kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-webhook
 }

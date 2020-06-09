@@ -1,0 +1,8 @@
+resources:
+# https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+- cert-manager.yaml
+
+patchesStrategicMerge:
+# adds
+# --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+- dns01_recursive_nameservers_patch.yaml
