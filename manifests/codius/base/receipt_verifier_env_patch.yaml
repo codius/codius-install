@@ -12,8 +12,6 @@ spec:
         - name: REDIS_URI
           value: mock
         - name: SPSP_ENDPOINT
-          # value: https://reddit.xrptipbot.com/wilsonianb/.well-known/pay
-          # value: https://codius.example.com/spsp/spsp/codiushost
           valueFrom:
             configMapKeyRef:
               name: codius-config
