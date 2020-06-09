@@ -2,7 +2,7 @@ bases:
 # - github.com/wilsonianb/codius-crd-operator/config/default
 - github.com/wilsonianb/codius-crd-operator/config/default?ref=ingress
 - github.com/wilsonianb/codius-install/manifests/codius-auth?ref=operator
-- github.com/wilsonianb/codius-install/manifests/codius-web?ref=operator
+- github.com/codius/codius-web/config/base
 - github.com/wilsonianb/codius-install/manifests/receipt-verifier?ref=operator
 
 patchesStrategicMerge:
