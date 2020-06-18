@@ -34,6 +34,10 @@ spec:
         backend:
           serviceName: codius-web
           servicePort: 3000
+      - path: /{id:services/.*$}
+        backend:
+          serviceName: codius-crd-operator-services-api
+          servicePort: 8081
 
 ---
 apiVersion: extensions/v1beta1
