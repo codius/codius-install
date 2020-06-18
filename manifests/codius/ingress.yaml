@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: codius-host
-  namespace: default
+  namespace: codius-system
   annotations:
     ingress.kubernetes.io/ssl-redirect: "true"
 spec:
@@ -22,10 +22,6 @@ spec:
         backend:
           serviceName: receipt-verifier
           servicePort: 3001
-      - path: /api
-        backend:
-          serviceName: kubernetes
-          servicePort: 443
       - path: /token
         backend:
           serviceName: codius-auth
@@ -38,6 +34,22 @@ spec:
         backend:
           serviceName: codius-web
           servicePort: 3000
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: codius-host
+  namespace: default
+spec:
+  rules:
+  - host: $(CODIUS_HOSTNAME)
+    http:
+      paths:
+      - path: /api
+        backend:
+          serviceName: kubernetes
+          servicePort: 443
       - path: /openapi/v2
         backend:
           serviceName: kubernetes

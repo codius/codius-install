@@ -261,10 +261,10 @@ payment_pointer_url=$PAYMENT_POINTER
 proxy_payment_pointer=\$$HOSTNAME
 EOF
   _exec kubectl apply -k /tmp/codius
-  _exec kubectl wait --for=condition=Available -n default deployment/codius-auth
-  _exec kubectl wait --for=condition=Available -n default deployment/codius-web
-  _exec kubectl wait --for=condition=Available -n default deployment/receipt-verifier
-  _exec kubectl wait --for=condition=Available -n codius-crd-operator-system deployment/codius-crd-operator-controller-manager
+  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-auth
+  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-web
+  _exec kubectl wait --for=condition=Available -n codius-system deployment/receipt-verifier
+  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-crd-operator-controller-manager
 }
 
 # ============================================== Helpers
@@ -407,7 +407,8 @@ EOF
   show_message info "[+] Installing cert-manager... "
   install_update_cert_manager
 
-  _exec kubectl apply -f "${K8S_MANIFEST_PATH}/codius-namespace.yaml"
+  _exec kubectl create namespace codius
+  _exec kubectl create namespace codius-system
 
   if [[ -z "$CERTFILE" ]]; then
     show_message info "[+] Installing acme-dns... "
@@ -450,10 +451,10 @@ EOF
     _exec kubectl apply -k $CERT_DIR
     _exec kubectl wait --for=condition=Ready --timeout=60s -n codius clusterissuer/letsencrypt
     _exec kubectl wait --for=condition=Ready --timeout=600s -n codius certificate/codius-host-wildcard
-    _exec kubectl wait --for=condition=Ready --timeout=600s certificate/codius-host
+    _exec kubectl wait --for=condition=Ready --timeout=600s -n codius-system certificate/codius-host
   else
     _exec kubectl create secret tls codius-host-wildcard-cert --key $KEYFILE --cert $CERTFILE --namespace codius
-    _exec kubectl create secret tls codius-host-cert --key $KEYFILE --cert $CERTFILE
+    _exec kubectl create secret tls codius-host-cert --key $KEYFILE --cert $CERTFILE --namespace codius-system
   fi
 
   # ============================================== Certificate

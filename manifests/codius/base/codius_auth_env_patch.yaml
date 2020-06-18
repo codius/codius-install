@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: codius-auth
-  namespace: default
 spec:
   template:
     spec:
@@ -10,7 +9,7 @@ spec:
       - name: codius-auth
         env:
         - name: RECEIPT_VERIFIER_URL
-          value: http://receipt-verifier.default:3000
+          value: http://$(RECEIPT_SVC_NAME).$(RECEIPT_SVC_NAMESPACE):3000
         - name: CODIUS_HOST_URL
           valueFrom:
             configMapKeyRef:

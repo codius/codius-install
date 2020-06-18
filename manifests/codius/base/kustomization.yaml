@@ -1,3 +1,5 @@
+namespace: codius-system
+
 bases:
 - github.com/codius/codius-crd-operator/config/default
 - github.com/codius/codius-auth/config/base
@@ -16,21 +18,18 @@ patchesJson6902:
     group: rbac.authorization.k8s.io
     kind: Role
     name: manager-role
-    namespace: codius-crd-operator-system
   path: replace_namespace.yaml
 - target:
     version: v1
     group: rbac.authorization.k8s.io
     kind: RoleBinding
     name: manager-rolebinding
-    namespace: codius-crd-operator-system
   path: replace_namespace.yaml
 - target:
     version: v1
     group: networking.k8s.io
     kind: NetworkPolicy
     name: deny-internal-egress
-    namespace: codius-crd-operator-system
   path: replace_namespace.yaml
 
 vars:
@@ -46,5 +45,33 @@ vars:
     kind: Service
     version: v1
     name: hello
+  fieldref:
+    fieldpath: metadata.namespace
+- name: AUTH_SVC_NAME
+  objref:
+    kind: Service
+    version: v1
+    name: codius-auth
+  fieldref:
+    fieldpath: metadata.name
+- name: AUTH_SVC_NAMESPACE
+  objref:
+    kind: Service
+    version: v1
+    name: codius-auth
+  fieldref:
+    fieldpath: metadata.namespace
+- name: RECEIPT_SVC_NAME
+  objref:
+    kind: Service
+    version: v1
+    name: receipt-verifier
+  fieldref:
+    fieldpath: metadata.name
+- name: RECEIPT_SVC_NAMESPACE
+  objref:
+    kind: Service
+    version: v1
+    name: receipt-verifier
   fieldref:
     fieldpath: metadata.namespace

@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
-  namespace: codius-crd-operator-system
 spec:
   template:
     spec:
@@ -10,11 +9,11 @@ spec:
       - name: manager
         env:
         - name: CODIUS_AUTH_URL
-          value: http://codius-auth.default.svc.cluster.local:8080/forward
+          value: http://$(AUTH_SVC_NAME).$(AUTH_SVC_NAMESPACE).svc.cluster.local:8080/forward
         - name: CODIUS_HOSTNAME
           valueFrom:
             configMapKeyRef:
-              name: codius-operator-config
+              name: codius-config
               key: hostname
         - name: CODIUS_CERT_SECRET
           value: codius-host-wildcard-cert
