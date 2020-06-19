@@ -1,7 +1,7 @@
 namespace: codius-system
 
 bases:
-- github.com/codius/codius-crd-operator/config/default
+- github.com/codius/codius-crd-operator/config/default?ref=scale
 - github.com/codius/codius-auth/config/base
 - github.com/codius/codius-web/config/base
 - github.com/coilhq/receipt-verifier/config/base

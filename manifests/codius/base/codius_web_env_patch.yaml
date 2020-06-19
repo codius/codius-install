@@ -7,6 +7,7 @@ spec:
     spec:
       containers:
       - name: codius-web
+        image: codius/codius-web:pr-6-merge
         env:
         - name: PAYMENT_POINTER
           valueFrom:
