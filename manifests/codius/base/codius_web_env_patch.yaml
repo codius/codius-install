@@ -7,6 +7,8 @@ spec:
     spec:
       containers:
       - name: codius-web
+        image: codius/codius-web:pr-11-merge
+        imagePullPolicy: Always
         env:
         - name: CODIUS_HOST_URI
           valueFrom:

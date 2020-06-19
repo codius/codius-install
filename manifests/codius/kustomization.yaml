@@ -1,5 +1,5 @@
 bases:
-- github.com/codius/codius-install/manifests/codius/base
+- github.com/codius/codius-install/manifests/codius/base?ref=test
 
 resources:
 - ingress.yaml
