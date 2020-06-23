@@ -1,5 +1,5 @@
 resources:
-- clusterissuer.yaml
+- issuer.yaml
 - certificate.yaml
 
 configMapGenerator:
@@ -9,7 +9,7 @@ configMapGenerator:
 
 secretGenerator:
 - name: acme-dns-solver
-  namespace: cert-manager
+  namespace: codius-system
   files:
   - acme-dns.json
 
@@ -32,7 +32,7 @@ vars:
   objref:
     apiVersion: v1alpha2
     group: cert-manager.io
-    kind: ClusterIssuer
+    kind: Issuer
     name: letsencrypt
   fieldref:
     fieldpath: metadata.name

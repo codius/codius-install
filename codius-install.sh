@@ -442,18 +442,16 @@ EOF
     show_message info "[+] Generating Let's Encrypt certificates... "
     ${SUDO} ${CURL_C} $CERT_DIR/kustomization.yaml "${K8S_MANIFEST_PATH}/letsencrypt/kustomization.yaml" >>"${LOG_OUTPUT}" 2>&1
     ${SUDO} ${CURL_C} $CERT_DIR/kustomizeconfig.yaml "${K8S_MANIFEST_PATH}/letsencrypt/kustomizeconfig.yaml" >>"${LOG_OUTPUT}" 2>&1
-    ${SUDO} ${CURL_C} $CERT_DIR/clusterissuer.yaml "${K8S_MANIFEST_PATH}/letsencrypt/clusterissuer.yaml" >>"${LOG_OUTPUT}" 2>&1
+    ${SUDO} ${CURL_C} $CERT_DIR/issuer.yaml "${K8S_MANIFEST_PATH}/letsencrypt/issuer.yaml" >>"${LOG_OUTPUT}" 2>&1
     ${SUDO} ${CURL_C} $CERT_DIR/certificate.yaml "${K8S_MANIFEST_PATH}/letsencrypt/certificate.yaml" >>"${LOG_OUTPUT}" 2>&1
     tee $CERT_DIR/config.env << EOF > /dev/null
 hostname=$HOSTNAME
 email=$EMAIL
 EOF
     _exec kubectl apply -k $CERT_DIR
-    _exec kubectl wait --for=condition=Ready --timeout=60s -n codius clusterissuer/letsencrypt
-    _exec kubectl wait --for=condition=Ready --timeout=600s -n codius certificate/codius-host-wildcard
+    _exec kubectl wait --for=condition=Ready --timeout=60s -n codius-system issuer/letsencrypt
     _exec kubectl wait --for=condition=Ready --timeout=600s -n codius-system certificate/codius-host
   else
-    _exec kubectl create secret tls codius-host-wildcard-cert --key $KEYFILE --cert $CERTFILE --namespace codius
     _exec kubectl create secret tls codius-host-cert --key $KEYFILE --cert $CERTFILE --namespace codius-system
   fi
 

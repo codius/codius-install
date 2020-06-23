@@ -1,6 +1,6 @@
 varReference:
 - path: spec/acme/email
-  kind: ClusterIssuer
+  kind: Issuer
 - path: spec/issuerRef/name
   kind: Certificate
 - path: spec/commonName
