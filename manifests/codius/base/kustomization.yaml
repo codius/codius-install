@@ -47,20 +47,6 @@ vars:
     name: hello
   fieldref:
     fieldpath: metadata.namespace
-- name: AUTH_SVC_NAME
-  objref:
-    kind: Service
-    version: v1
-    name: codius-auth
-  fieldref:
-    fieldpath: metadata.name
-- name: AUTH_SVC_NAMESPACE
-  objref:
-    kind: Service
-    version: v1
-    name: codius-auth
-  fieldref:
-    fieldpath: metadata.namespace
 - name: RECEIPT_SVC_NAME
   objref:
     kind: Service

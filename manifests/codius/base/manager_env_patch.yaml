@@ -8,18 +8,18 @@ spec:
       containers:
       - name: manager
         env:
-        - name: CODIUS_AUTH_URL
-          value: http://$(AUTH_SVC_NAME).$(AUTH_SVC_NAMESPACE).svc.cluster.local:8080/forward
+        - name: REQUEST_PRICE
+          value: "1"
         - name: CODIUS_HOSTNAME
           valueFrom:
             configMapKeyRef:
               name: codius-config
               key: hostname
-        - name: CODIUS_CERT_SECRET
-          value: codius-host-wildcard-cert
         - name: CODIUS_HELLO_SVC_URL
           value: $(HELLO_SVC_NAME).$(HELLO_SVC_NAMESPACE)
         - name: CODIUS_NAMESPACE
           value: codius
+        - name: RECEIPT_VERIFIER_URL
+          value: http://$(RECEIPT_SVC_NAME).$(RECEIPT_SVC_NAMESPACE):3000
         - name: RUNTIME_CLASS_NAME
           value: kata-qemu
