@@ -58,3 +58,24 @@ spec:
         backend:
           serviceName: kubernetes
           servicePort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: codius-services
+  namespace: codius-system
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - "*.$(CODIUS_HOSTNAME)"
+    secretName: codius-host-cert
+  rules:
+  - host: "*.$(CODIUS_HOSTNAME)"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: codius-crd-operator-services-proxy
+          servicePort: 8082
