@@ -44,6 +44,8 @@ K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/ma
 CALICO_BASE="github.com/codius/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
 CERT_MANAGER_BASE="github.com/codius/codius-install/manifests/cert-manager?ref=${INSTALLER_BRANCH}"
+########## Kata ##########
+KATA_BASE="github.com/codius/codius-install/manifests/kata?ref=${INSTALLER_BRANCH}"
 ########## Constant ##########
 #Color Constant
 RED=`tput setaf 1`
@@ -220,7 +222,7 @@ install_update_k3s() {
 
 install_update_kata() {
   _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-rbac/base
-  _exec kubectl apply -k github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
+  _exec kubectl apply -k $KATA_BASE
   _exec kubectl rollout status ds -n kube-system kata-deploy
   # wait for k3s to restart
   while kubectl logs --selector=name=kata-deploy -n kube-system -f > /dev/null 2>&1; do true; done
