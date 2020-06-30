@@ -8,10 +8,15 @@ spec:
       containers:
       - name: receipt-verifier
         env:
-        - name: REDIS_URI
-          value: mock
         - name: SPSP_ENDPOINT
           valueFrom:
             configMapKeyRef:
               name: codius-config
               key: payment_pointer_url
+      - name: redis
+        image: redis
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
