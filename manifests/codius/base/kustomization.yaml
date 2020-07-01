@@ -33,6 +33,20 @@ patchesJson6902:
   path: replace_namespace.yaml
 
 vars:
+- name: CODIUS_WEB_SVC_NAME
+  objref:
+    kind: Service
+    version: v1
+    name: codius-web
+  fieldref:
+    fieldpath: metadata.name
+- name: CODIUS_WEB_SVC_NAMESPACE
+  objref:
+    kind: Service
+    version: v1
+    name: codius-web
+  fieldref:
+    fieldpath: metadata.namespace
 - name: HELLO_SVC_NAME
   objref:
     kind: Service

@@ -8,6 +8,11 @@ spec:
       containers:
       - name: codius-web
         env:
+        - name: CODIUS_HOST_URI
+          valueFrom:
+            configMapKeyRef:
+              name: codius-config
+              key: host_url
         - name: PAYMENT_POINTER
           valueFrom:
             configMapKeyRef:

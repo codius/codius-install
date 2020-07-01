@@ -19,6 +19,8 @@ spec:
           value: $(HELLO_SVC_NAME).$(HELLO_SVC_NAMESPACE)
         - name: CODIUS_NAMESPACE
           value: codius
+        - name: CODIUS_WEB_URL
+          value: http://$(CODIUS_WEB_SVC_NAME).$(CODIUS_WEB_SVC_NAMESPACE):3000
         - name: RECEIPT_VERIFIER_URL
           value: http://$(RECEIPT_SVC_NAME).$(RECEIPT_SVC_NAMESPACE):3000
         - name: RUNTIME_CLASS_NAME
