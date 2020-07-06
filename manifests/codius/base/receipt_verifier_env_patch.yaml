@@ -8,6 +8,8 @@ spec:
       containers:
       - name: receipt-verifier
         env:
+        - name: REDIS_URI
+          value: redis://127.0.0.1:6379/
         - name: SPSP_ENDPOINT
           valueFrom:
             configMapKeyRef:
