@@ -196,7 +196,7 @@ install_update_k3s() {
     --disable traefik \
     --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
     --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
-  until kubectl get node > /dev/null 2>&1 || (( k3s_count++ >= 10 ))
+  until kubectl get node > /dev/null 2>&1 || (( k3s_count++ >= 60 ))
   do
     sleep 1
   done
@@ -210,7 +210,7 @@ install_update_k3s() {
   sed -i '/ssl:/a \      insecureSkipVerify: true' /tmp/traefik.yaml
   _exec cp /tmp/traefik.yaml /var/lib/rancher/k3s/server/manifests/traefik-mod.yaml
   _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
-  until kubectl get job -n kube-system helm-install-traefik > /dev/null 2>&1 || (( traefik_count++ >= 30 ))
+  until kubectl get job -n kube-system helm-install-traefik > /dev/null 2>&1 || (( traefik_count++ >= 60 ))
   do
     sleep 1
   done
@@ -224,7 +224,7 @@ install_update_kata() {
   _exec kubectl rollout status ds -n kube-system kata-deploy
   # wait for k3s to restart
   while kubectl logs --selector=name=kata-deploy -n kube-system -f > /dev/null 2>&1; do true; done
-  until kubectl get node > /dev/null 2>&1 || (( count++ >= 10 ))
+  until kubectl get node > /dev/null 2>&1 || (( count++ >= 60 ))
   do
     sleep 1
   done
