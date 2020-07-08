@@ -36,7 +36,7 @@ spec:
           servicePort: 3000
       - path: /{id:services/.*$}
         backend:
-          serviceName: codius-crd-operator-services-api
+          serviceName: codius-operator-services-api
           servicePort: 8081
 
 ---
@@ -77,5 +77,5 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: codius-crd-operator-services-proxy
+          serviceName: codius-operator-services-proxy
           servicePort: 8082

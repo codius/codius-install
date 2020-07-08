@@ -264,7 +264,7 @@ EOF
   _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-auth
   _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-web
   _exec kubectl wait --for=condition=Available -n codius-system deployment/receipt-verifier
-  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-crd-operator-controller-manager
+  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-operator-controller-manager
 }
 
 # ============================================== Helpers
