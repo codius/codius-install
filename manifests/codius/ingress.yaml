@@ -22,10 +22,6 @@ spec:
         backend:
           serviceName: receipt-verifier
           servicePort: 3001
-      - path: /token
-        backend:
-          serviceName: codius-auth
-          servicePort: 8080
       - path: /{id:balances/.*:creditReceipt$}
         backend:
           serviceName: receipt-verifier
@@ -34,30 +30,11 @@ spec:
         backend:
           serviceName: codius-web
           servicePort: 3000
-      - path: /{id:services/.*$}
+      - path: /services
         backend:
           serviceName: codius-operator-services-api
           servicePort: 8081
 
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: codius-host
-  namespace: default
-spec:
-  rules:
-  - host: $(CODIUS_HOSTNAME)
-    http:
-      paths:
-      - path: /api
-        backend:
-          serviceName: kubernetes
-          servicePort: 443
-      - path: /openapi/v2
-        backend:
-          serviceName: kubernetes
-          servicePort: 443
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

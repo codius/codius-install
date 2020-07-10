@@ -10,6 +10,8 @@ spec:
         env:
         - name: REQUEST_PRICE
           value: "1"
+        - name: SERVICE_PRICE
+          value: "1"
         - name: CODIUS_HOSTNAME
           valueFrom:
             configMapKeyRef:

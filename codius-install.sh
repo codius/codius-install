@@ -39,7 +39,6 @@ K8S_MANIFEST_PATH="https://raw.githubusercontent.com/codius/codius-install/${INS
 ########## k3s ##########
 K3S_VERSION="v1.18.6+k3s1"
 K3S_INSTALL_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/install.sh"
-K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/manifests/traefik.yaml"
 ########## Calico ##########
 CALICO_BASE="github.com/codius/codius-install/manifests/calico?ref=${INSTALLER_BRANCH}"
 ########## Cert-manager ##########
@@ -187,29 +186,17 @@ check_user() {
 
 install_update_k3s() {
   ${SUDO} ${CURL_C} /tmp/k3s-install.sh ${K3S_INSTALL_URL} >>"${LOG_OUTPUT}" 2>&1 && ${SUDO} chmod a+x /tmp/k3s-install.sh
-  ${SUDO} ${CURL_C} /var/tmp/authentication-token-webhook-config.yaml "${K8S_MANIFEST_PATH}/authentication-token-webhook-config.yaml" >>"${LOG_OUTPUT}" 2>&1
-  sed -i s/codius.example.com/$HOSTNAME/g /var/tmp/authentication-token-webhook-config.yaml
   _exec bash /tmp/k3s-install.sh \
     --cluster-cidr=192.168.0.0/16 \
     --flannel-backend=none \
     --disable-network-policy \
-    --disable traefik \
-    --disable-selinux \
-    --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
-    --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
+    --disable-selinux
   until kubectl get node > /dev/null 2>&1 || (( k3s_count++ >= 60 ))
   do
     sleep 1
   done
   _exec kubectl apply -k $CALICO_BASE
   _exec kubectl rollout status ds -n kube-system calico-node
-
-  ${SUDO} ${CURL_C} /tmp/traefik.yaml $K3S_TRAEFIK_URL >>"${LOG_OUTPUT}" 2>&1
-  # Allow ingress for kube apiserver
-  # Manually add traefik helm config and run k3s with --disable traefik
-  # Otherwise, restarting k3s reverts changes to the traefik helm config
-  sed -i '/ssl:/a \      insecureSkipVerify: true' /tmp/traefik.yaml
-  _exec cp /tmp/traefik.yaml /var/lib/rancher/k3s/server/manifests/traefik-mod.yaml
   _exec kubectl wait --for=condition=Available -n kube-system deployment/coredns
   until kubectl get job -n kube-system helm-install-traefik > /dev/null 2>&1 || (( traefik_count++ >= 60 ))
   do
@@ -262,7 +249,6 @@ payment_pointer_url=$PAYMENT_POINTER
 proxy_payment_pointer=\$$HOSTNAME
 EOF
   _exec kubectl apply -k /tmp/codius
-  _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-auth
   _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-web
   _exec kubectl wait --for=condition=Available -n codius-system deployment/receipt-verifier
   _exec kubectl wait --for=condition=Available -n codius-system deployment/codius-operator-controller-manager
