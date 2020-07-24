@@ -33,7 +33,7 @@ CURL_C="curl -SL -o"
 LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
 BASE_DIR=$(cd "$(dirname "$0")"; pwd); cd ${BASE_DIR}
-INSTALLER_BRANCH="master"
+INSTALLER_BRANCH="selinux"
 INSTALLER_URL="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
 K8S_MANIFEST_PATH="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/manifests"
 ########## k3s ##########
