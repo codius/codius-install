@@ -37,7 +37,7 @@ INSTALLER_BRANCH="master"
 INSTALLER_URL="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/codius-install.sh"
 K8S_MANIFEST_PATH="https://raw.githubusercontent.com/codius/codius-install/${INSTALLER_BRANCH}/manifests"
 ########## k3s ##########
-K3S_VERSION="v1.18.3+k3s1"
+K3S_VERSION="v1.18.6+k3s1"
 K3S_INSTALL_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/install.sh"
 K3S_TRAEFIK_URL="https://raw.githubusercontent.com/rancher/k3s/${K3S_VERSION}/manifests/traefik.yaml"
 ########## Calico ##########
