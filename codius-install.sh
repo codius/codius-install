@@ -194,6 +194,7 @@ install_update_k3s() {
     --flannel-backend=none \
     --disable-network-policy \
     --disable traefik \
+    --disable-selinux \
     --kube-apiserver-arg authentication-token-webhook-config-file=/var/tmp/authentication-token-webhook-config.yaml \
     --kube-apiserver-arg authentication-token-webhook-cache-ttl=0s
   until kubectl get node > /dev/null 2>&1 || (( k3s_count++ >= 60 ))
