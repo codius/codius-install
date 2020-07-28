@@ -8,6 +8,7 @@ spec:
   issuerRef:
     name: $(ISSUER_NAME)
     kind: Issuer
+  renewBefore: 2159h30m
   commonName: $(CODIUS_HOSTNAME)
   dnsNames:
   - $(CODIUS_HOSTNAME)
