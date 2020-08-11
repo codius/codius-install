@@ -2,7 +2,7 @@
 # File              : codius-install.sh
 # Author            : N3TC4T <netcat.av@gmail.com>
 # Date              : 16.06.2018
-# Last Modified Date: 05.07.2020
+# Last Modified Date: 11.08.2020
 # Last Modified By  : wilsonianb <brandon@coil.com>
 # Copyright (c) 2018 N3TC4T <netcat.av@gmail.com>
 #
