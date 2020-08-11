@@ -28,7 +28,6 @@ set -e
 
 ########## Variable ##########
 SUDO=""
-BASH_C="bash -c"
 CURL_C="curl -SL -o"
 LOG_OUTPUT="/tmp/${0##*/}$(date +%Y-%m-%d.%H-%M)"
 CURRENT_USER="$(id -un 2>/dev/null || true)"
@@ -56,8 +55,6 @@ RESET=`tput sgr0`
 ERR_ROOT_PRIVILEGE_REQUIRED=(10 "This install script needs root privilege, please retry using 'sudo' or root user!")
 ERR_NOT_PUBLIC_IP=(11 "You need a public IP to run Codius!")
 ERR_NOT_SUPPORT_DISTRO=(21 "Sorry, the installer only supports centos/ubuntu/debian/fedora.")
-ERR_UNKNOWN_MSG_TYPE=98
-ERR_UNKNOWN=99
 # Helpers ==============================================
 
 display_header()
@@ -112,7 +109,6 @@ function _exec() {
   local COMMAND=$1
   shift      ## Clip the first value of the $@, the rest are the options. 
   local COMMAND_OPTIONS="$@"
-  local COMMAND_OUTPUT=""
   echo -e "\n==================================" >> "${LOG_OUTPUT}"
   echo "${COMMAND} $COMMAND_OPTIONS" >> "${LOG_OUTPUT}"
   echo -e "==================================\n" >> "${LOG_OUTPUT}"
@@ -123,36 +119,9 @@ function _exec() {
   exec 3>&-
 
   if ! wait ${PID};then
+    status=$?
     show_message error "An error occurred. See ${LOG_OUTPUT}"
-    exit ${ret}
-  fi
-}
-
-function program_is_installed {
-  # set to 1 initially
-  local return_=1
-  # set to 0 if not found
-  type $1 >/dev/null 2>&1 || { local return_=0; }
-  # return value
-  echo "$return_"
-}
-
-function service_is_running {
-  # set to 1 initially
-  local return_=0
-  # set to 0 if not found
-  if (( $(ps -ef | grep -v grep | grep $1 | wc -l) > 0 )) ;then
-    local return_=1
-  fi
-  # return value
-  echo "$return_"
-}
-
-function echo_if {
-  if [ $1 == 1 ]; then
-    echo -e "${LIGHT}${GREEN}✔ ${RESET}"
-  else
-    echo -e "${RED}✘${RESET}"
+    exit $status
   fi
 }
 
