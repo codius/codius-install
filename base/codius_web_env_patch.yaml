@@ -7,6 +7,8 @@ spec:
     spec:
       containers:
       - name: codius-web
+        image: codius/codius-web:pr-15-merge
+        imagePullPolicy: Always
         env:
         - name: PAYMENT_POINTER
           value: $system.$(RootDomain)

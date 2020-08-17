@@ -1,5 +1,5 @@
 bases:
-- github.com/codius/codius-install/base
+- github.com/codius/codius-install/base?ref=openfaas
 
 configMapGenerator:
 - name: codius-config
