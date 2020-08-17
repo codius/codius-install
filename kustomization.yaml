@@ -1,0 +1,16 @@
+bases:
+- github.com/codius/codius-install/base
+
+configMapGenerator:
+- name: codius-config
+  namespace: openfaas
+  env: config.env
+
+vars:
+- name: RootDomain
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: codius-config
+  fieldref:
+    fieldpath: data.hostname

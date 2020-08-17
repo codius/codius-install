@@ -8,18 +8,12 @@ spec:
       containers:
       - name: codius-web
         env:
-        - name: CODIUS_HOST_URI
-          valueFrom:
-            configMapKeyRef:
-              name: codius-config
-              key: host_url
         - name: PAYMENT_POINTER
-          valueFrom:
-            configMapKeyRef:
-              name: codius-config
-              key: proxy_payment_pointer
+          value: $system.$(RootDomain)
         - name: RECEIPT_VERIFIER_URI
+          value: https://system.$(RootDomain)
+        - name: REQUEST_PRICE
           valueFrom:
             configMapKeyRef:
               name: codius-config
-              key: host_url
+              key: request_price
