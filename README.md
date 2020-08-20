@@ -21,3 +21,33 @@ kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.i
 kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.io/default-backend=codius-web
 kubectl apply -k .
 ```
+
+#### Function isolation
+
+Use a container isolation solution such as [Kata](https://katacontainers.io/) or [gVisor](https://gvisor.dev/).
+
+##### Kata
+
+```
+kubectl apply -k github.com/codius/codius-install/kata/deploy?ref=openfaas
+```
+or for k3s:
+```
+kubectl apply -k github.com/codius/codius-install/kata/deploy-k3s?ref=openfaas
+```
+
+Then run:
+```
+kubectl apply -f https://raw.githubusercontent.com/kata-containers/packaging/master/kata-deploy/k8s-1.18/kata-runtimeClasses.yaml
+kubectl set env -n openfaas-fn deploy/buildshiprun profile=kata-qemu
+```
+
+##### gVisor
+
+Enable [GKE Sandbox](https://cloud.google.com/kubernetes-engine/docs/how-to/sandbox-pods) or install [containerd-shim-runsc-v1](https://gvisor.dev/docs/user_guide/containerd/quick_start/)
+
+Then run:
+```
+kubectl apply -k github.com/codius/codius-install/gvisor?ref=openfaas
+kubectl set env -n openfaas-fn deploy/buildshiprun profile=gvisor
+```

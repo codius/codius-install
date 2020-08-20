@@ -1,0 +1,5 @@
+bases:
+- github.com/kata-containers/packaging/kata-deploy/kata-rbac/base
+
+resources:
+- profile.yaml

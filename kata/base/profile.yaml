@@ -1,0 +1,7 @@
+kind: Profile
+apiVersion: openfaas.com/v1
+metadata:
+  name: kata-qemu
+  namespace: openfaas
+spec:
+  runtimeClassName: kata-qemu
