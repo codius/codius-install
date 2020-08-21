@@ -1,0 +1,9 @@
+bases:
+- ../base
+
+patchesStrategicMerge:
+# adds
+# "container_settings": {
+#   "allow_ip_forwarding": true
+# }
+- allow_ip_forwarding_patch.yaml
