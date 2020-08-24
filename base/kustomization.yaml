@@ -7,6 +7,7 @@ bases:
 
 resources:
 - ingress.yaml
+- prometheus-net-policy.yaml
 
 patchesStrategicMerge:
 - codius_web_env_patch.yaml
