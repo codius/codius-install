@@ -13,4 +13,11 @@ vars:
     kind: ConfigMap
     name: codius-config
   fieldref:
-    fieldpath: data.hostname
+    fieldpath: data.root_domain
+- name: RuntimeClass
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: codius-config
+  fieldref:
+    fieldpath: data.runtime_class

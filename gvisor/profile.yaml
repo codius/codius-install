@@ -1,7 +1,0 @@
-kind: Profile
-apiVersion: openfaas.com/v1
-metadata:
-  name: gvisor
-  namespace: openfaas
-spec:
-  runtimeClassName: gvisor

@@ -1,3 +1,5 @@
 varReference:
 - path: spec/tls/secretName
   kind: Ingress
+- path: spec/runtimeClassName
+  kind: Profile

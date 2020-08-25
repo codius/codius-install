@@ -1,7 +1,7 @@
 kind: Profile
 apiVersion: openfaas.com/v1
 metadata:
-  name: kata-qemu
+  name: ofc-workload
   namespace: openfaas
 spec:
-  runtimeClassName: kata-qemu
+  runtimeClassName: $(RuntimeClass)

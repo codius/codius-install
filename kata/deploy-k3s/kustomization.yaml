@@ -1,3 +1,0 @@
-bases:
-- ../base
-- github.com/kata-containers/packaging/kata-deploy/kata-deploy/overlays/k3s
