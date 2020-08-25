@@ -2,9 +2,10 @@ bases:
 - ../remote
 
 resources:
+- audit-event-net-policy.yaml
 - ingress.yaml
+- metrics-net-policy.yaml
 - profile.yaml
-- prometheus-net-policy.yaml
 - workload-net-policy.yaml
 
 configurations:
