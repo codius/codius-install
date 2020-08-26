@@ -36,5 +36,7 @@ kubectl set env -n openfaas-fn deploy/buildshiprun profile=ofc-workload
 kubectl set env -n openfaas-fn deploy/system-github-event validate_customers=false
 kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.io/custom-http-errors=402
 kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.io/default-backend=codius-web
+kubectl apply -f https://raw.githubusercontent.com/wilsonianb/faas-netes/dnspolicy-profile/artifacts/crds/openfaas.com_profiles.yaml
+kubectl patch -n openfaas deploy/gateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"faas-netes","image":"wilsonianbcoil/faas-netes:pr-1-merge","imagePullPolicy":"Always"}]}}}}'
 kubectl apply -k .
 ```

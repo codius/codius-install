@@ -5,3 +5,4 @@ metadata:
   namespace: openfaas
 spec:
   runtimeClassName: $(RuntimeClass)
+  dnsPolicy: Default
