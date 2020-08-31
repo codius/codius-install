@@ -19,7 +19,7 @@ spec:
       paths:
       - path: /_next
         backend:
-          serviceName: codius-web
+          serviceName: svc-402-page
           servicePort: 3000
       - path: /.well-known/pay
         backend:
