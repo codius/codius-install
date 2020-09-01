@@ -38,5 +38,6 @@ kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.i
 kubectl annotate ingress -n openfaas openfaas-ingress nginx.ingress.kubernetes.io/default-backend=svc-402-page
 kubectl apply -f https://raw.githubusercontent.com/wilsonianb/faas-netes/dnspolicy-profile/artifacts/crds/openfaas.com_profiles.yaml
 kubectl patch -n openfaas deploy/gateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"faas-netes","image":"wilsonianbcoil/faas-netes:pr-1-merge","imagePullPolicy":"Always"}]}}}}'
+kubectl patch serviceaccount -n openfaas-fn default -p '{"automountServiceAccountToken": false}'
 kubectl apply -k .
 ```
