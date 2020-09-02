@@ -3,6 +3,7 @@ bases:
 
 resources:
 - audit-event-net-policy.yaml
+- github-app-configmap.yaml
 - ingress.yaml
 - metrics-net-policy.yaml
 - profile.yaml

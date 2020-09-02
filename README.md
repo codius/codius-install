@@ -40,4 +40,5 @@ kubectl apply -f https://raw.githubusercontent.com/wilsonianb/faas-netes/dnspoli
 kubectl patch -n openfaas deploy/gateway -p '{"spec":{"template":{"spec":{"containers":[{"name":"faas-netes","image":"wilsonianbcoil/faas-netes:pr-1-merge","imagePullPolicy":"Always"}]}}}}'
 kubectl patch serviceaccount -n openfaas-fn default -p '{"automountServiceAccountToken": false}'
 kubectl apply -k .
+kubectl patch -n openfaas-fn deploy/system-dashboard -p '{"spec":{"template":{"spec":{"containers":[{"name":"system-dashboard","image":"wilsonianbcoil/of-cloud-dashboard:pr-1-merge","imagePullPolicy":"Always","env":[{"name": "github_app_url","valueFrom": {"configMapKeyRef": {"key": "github_app_url","name": "github-app"}}}]}]}}}}'
 ```

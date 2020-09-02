@@ -21,3 +21,10 @@ vars:
     name: codius-config
   fieldref:
     fieldpath: data.runtime_class
+- name: GithubAppUrl
+  objref:
+    apiVersion: v1
+    kind: ConfigMap
+    name: codius-config
+  fieldref:
+    fieldpath: data.github_app_url
